@@ -26,7 +26,7 @@ int velocidades(float *vel, int N, float T){
     for(i=0, i<3*N, i++){
         vels = 0;
         for(j=0, j<k, j++){
-            vels += (rand()/RAND_MAX - 0.5)*2*sigma*sqrt(3*n);
+            vels += (rand()/RAND_MAX - 0.5)*2*sigma*sqrt(3*k);
         }
         vels /= k;
         vel[i] = vels;
