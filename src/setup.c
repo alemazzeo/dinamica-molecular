@@ -74,9 +74,11 @@ if (s>n*n && s<n*n*n) {
   }
 }
 
+/*
   for (l=0;l<3*N;l++) {
     printf ("%f\n",*(pos + l));
   }
+ */
 
 return 0;
 
