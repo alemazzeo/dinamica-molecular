@@ -1,3 +1,5 @@
+#include "energia.h"
+
 float energia(float *pos, float *vel, int n)
 {
     float energia=0;

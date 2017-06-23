@@ -3,6 +3,8 @@
 #include <time.h>
 #include <math.h>
 
+#include "setup.h"
+
 int llenar (float *pos, float N, float L){
   int n,i,j,k,l,s;
   float p,a;
@@ -19,7 +21,7 @@ int llenar (float *pos, float N, float L){
   for (k=0;k<n;k++){
     for (j=0;j<n;j++){
       for (i=0;i<n;i++){
-        pos[3*i + (3*n)*j + (3*n*n)*k)] = (a/2) + i*a;
+        *(pos + 3*i + (3*n)*j + (3*n*n)*k) = (a/2) + i*a;
         *(pos + 1 + 3*i + (3*n)*j + (3*n*n)*k) = (a/2) + j*a;
         *(pos + 2 + 3*i + (3*n)*j + (3*n*n)*k) = (a/2) + k*a;
       }
@@ -88,9 +90,9 @@ int velocidades(float *vel, int N, float T){
     int i,j;
 
     // Genero distribucion de velocidades
-    for(i=0, i<3*N, i++){
+    for(i=0; i<3*N; i++){
         vels = 0;
-        for(j=0, j<k, j++){
+        for(j=0; j<k; j++){
             vels += (rand()/RAND_MAX - 0.5)*2*sigma*sqrt(3*k);
         }
         vels /= k;
@@ -98,9 +100,9 @@ int velocidades(float *vel, int N, float T){
     }
 
     // Resto velocidad promedio
-    for(i=0, i<3, i++){
+    for(i=0; i<3; i++){
         float promedio = avg_vel(vel, N, i);
-        for(j=0, j<3*N, j=j+3){
+        for(j=0; j<3*N; j=j+3){
             vel[j+i] -= promedio;
         }
     }
@@ -110,7 +112,7 @@ int velocidades(float *vel, int N, float T){
 
 float avg_vel(float *vel, int N, int coordenada){
     float promedio = 0;
-    for(int i=0, i<3*N, i=i+3){
+    for(int i=0; i<3*N; i=i+3){
         promedio += vel[i+coordenada];
     }
     return promedio/N;

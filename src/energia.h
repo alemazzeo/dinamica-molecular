@@ -1,6 +1,10 @@
 #ifndef ENERGIA_H
 #define ENERGIA_H
 
+#define M      1.0
+#define EPS    1.0
+#define GAMMA  1.0
+
 float energia(float *pos, float *vel, int n);
 
 /*

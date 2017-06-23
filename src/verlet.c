@@ -1,7 +1,8 @@
 #include "verlet.h"
+#include "math.h"
 
 int verlet(float *pos, float *vel, float **fza, float **fza_aux,
-	   int n, float L, float h)
+	   int n, float L, float h, float rc)
 {
     float *swap; // Puntero auxiliar para intercambiar las fuerzas
 
@@ -36,13 +37,13 @@ int nueva_pos(float *pos, float *vel, float *fza, int n, float h, float L)
     }
 
     // Aplica condiciones de contorno
-    c_cont(pos, N, L);
+    c_cont(pos, n, L);
 
     return 0;
 }
 
 int c_cont(float *pos, int N, float L){
-    for(int i=0, i<3*N, i++){
+    for(int i=0; i<3*N; i++){
         pos[i] = pos[i] - L*floor(pos[i]/L);
     }
     return 0;

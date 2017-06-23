@@ -20,9 +20,10 @@
  * n: (int) Cantidad de particulas
  * L: (float) Tamaño de la caja
  * h: (float) Tamaño del paso de Verlet
+ * rc: (float) Distancia de corte
  *
  */
-int verlet(float *pos, float *vel, float **fza, float **fza_aux, int n, float L, float h);
+int verlet(float *pos, float *vel, float **fza, float **fza_aux, int n, float L, float h, float rc);
 
 /*
  * Función: nueva_pos

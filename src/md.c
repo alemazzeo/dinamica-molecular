@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     float h = 0.001; // Intervalo de tiempo entre simulaciones
     int niter = 100; // Nr de veces que se deja evolucionar
     float T = 0.728; // Temperatura
-    int i,j; // Indices para loopear
+    int i; // Indices para loopear
 
     float *pos = malloc(3*N*sizeof(float));
     float *vel = malloc(3*N*sizeof(float));
@@ -23,11 +23,11 @@ int main(int argc, char **argv){
     float *fza_aux = malloc(3*N*sizeof(float));
 
     // Inicializa la caja con las N partiuclas
-    llenar(*posiciones, N, L);
-    velocidades(*velocidades, N, T);
+    llenar(pos, N, L);
+    velocidades(vel, N, T);
 
     for(i=0;i<niter;i++){
-        verlet(*pos, *vel, &fza, &fza_aux, N, L, h);
+        verlet(pos, vel, &fza, &fza_aux, N, L, h, rc);
         printf("%f\t%f\t%f\n", pos[0],pos[1],pos[2]);
     }
 
