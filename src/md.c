@@ -21,19 +21,25 @@ int main(int argc, char **argv) {
     float *vel = (float *)malloc(3*N*sizeof(float));
     float *fza = (float *)malloc(3*N*sizeof(float));
     float *fza_aux = (float *)malloc(3*N*sizeof(float));
-
+    float *lambda = (float *)malloc(niter*sizeof(float));
     // Inicializa la caja con las N partiuclas
     llenar(pos, N, L);
     velocidades(vel, N, T);
 
     for(i=0;i<niter;i++){
         verlet(pos, vel, &fza, &fza_aux, N, L, h, rc);
-        printf("%f\t%f\t%f\n", pos[0], pos[1], pos[2]);
+        printf("%f\t%f\t%f\n", pos[0],pos[1],pos[2]);
+        lambda[i] = lambda_verlet (pos, N, L);
+    }
+
+    for (i=0;i<niter;i++) {
+        printf("%f\n", lambda[i]);
     }
 
     free(pos);
     free(vel);
     free(fza);
     free(fza_aux);
+    free(lambda);
 
 }

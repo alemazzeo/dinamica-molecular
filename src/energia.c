@@ -1,3 +1,4 @@
+#include <math.h>
 #include "energia.h"
 
 float energia(float *pos, float *vel, int n)
@@ -55,4 +56,24 @@ float potencial(float *pos_i, float *pos_j)
     // Lennard-Jones
     pot = 4 * EPS * (exp12 - exp6);
     return pot;
+}
+
+
+float lambda_verlet (float *pos, float N, float L) {
+    int i;
+    float pi,a, lx, ly, lz, l, b;
+    pi = 3;
+    a = L/N; //separacion entre partículas
+    b = (2*pi)/a; // parte del argumento de coseno
+        //calculo lambda x : lx, lamba y :ly y lambda z : lz.
+    for (i=0; i<N;i++) {
+        lx += cos (b*(pos[3*i]-(a/2)));
+        ly += cos (b*(pos[3*i+1]-(a/2)));
+        lz += cos (b*(pos[3*i+2]-(a/2)));
+    }
+    lx =  (lx/N);
+    ly =  (ly/N);
+    lz =  (lz/N);
+    l = (lx+ly+lz)/3; // lambda total
+    return l;
 }

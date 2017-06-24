@@ -41,5 +41,7 @@ float distancia2(float *pos_i, float *pos_j);
  * return: (float) Módulo de la distancia al cuadrado
  */
 float potencial(float *pos_i, float *pos_j);
+float lambda_verlet (float *pos, float N, float L);
+
 
 #endif
