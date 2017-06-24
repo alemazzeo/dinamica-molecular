@@ -14,9 +14,9 @@ int llenar (float *pos, float N, float L){
     float r = p - n; // r es la parte decimal de p
     // si r < 0.5 acomodo las particulas en la caja y las que sobra las distribuyo después.
     if (r < 0.5) {
-        n = n;
+        n = n; //????
         s = N - n*n*n; //cantidad de particulas que sobran
-  //Acomodo las particulas. El for en i es para la coordenada x, el de j para y y el de k para z.
+        //Acomodo las particulas. El for en i es para la coordenada x, el de j para y y el de k para z.
         for (k=0;k<n;k++){
             for (j=0;j<n;j++){
                 for (i=0;i<n;i++){
