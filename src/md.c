@@ -15,13 +15,15 @@ int main(int argc, char **argv) {
     float h = 0.001; // Intervalo de tiempo entre simulaciones
     int niter = 100; // Nro de veces que se deja evolucionar
     float T = 0.728; // Temperatura
-    int i; // Indices para loopear
+    int i; // Indices para loopear    
 
+    // Aloja memoria para los vectores
     float *pos = (float *)malloc(3*N*sizeof(float));
     float *vel = (float *)malloc(3*N*sizeof(float));
     float *fza = (float *)malloc(3*N*sizeof(float));
     float *fza_aux = (float *)malloc(3*N*sizeof(float));
     float *lambda = (float *)malloc(niter*sizeof(float));
+
     // Inicializa la caja con las N partiuclas
     llenar(pos, N, L);
     velocidades(vel, N, T);

@@ -5,6 +5,15 @@
 #define EPS    1.0
 #define GAMMA  1.0
 
+/*
+ * Función: energia
+ * ----------------
+ * Calcula la energia mediante el hamiltoniano.
+ *
+ * pos: (float *) Vector de dimensión 3N para las posiciones.
+ * vel: (float *) Vector de dimensión 3N para las velocidades.
+ * n: Cantidad de particulas
+ */
 float energia(float *pos, float *vel, int n);
 
 /*
