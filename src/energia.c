@@ -61,7 +61,7 @@ float potencial(float *pos_i, float *pos_j)
 
 float lambda_verlet (float *pos, float N, float L) {
     int i;
-    float pi,a, lx, ly, lz, l, b;
+    float pi, a, lx, ly, lz, l, b;
     pi = 3;
     a = L/N; //separacion entre partículas
     b = (2*pi)/a; // parte del argumento de coseno

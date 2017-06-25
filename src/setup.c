@@ -89,13 +89,13 @@ int velocidades(float *vel, int N, float T){
     for(i=0; i<3*N; i++){
         vels = 0;
         for(j=0; j<k; j++){
-            vels += (rand()/RAND_MAX - 0.5)*2*sigma*sqrt(3*k);
+            vels += ((float)rand()/RAND_MAX - 0.5)*2*sigma*sqrt(3*k);
         }
         vels /= k;
         vel[i] = vels;
     }
 
-    // Resto velocidad promedio
+    //Resto velocidad promedio
     for(i=0; i<3; i++){
         float promedio = avg_vel(vel, N, i);
         for(j=0; j<3*N; j=j+3){
