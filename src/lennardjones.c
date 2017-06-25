@@ -35,7 +35,7 @@ float lennardjones(float r){
     return 4*(pow(r, -12) - pow(r, -6));
 }
 
-float spline(float *LJ_LUT, int k, float *vec_pos, float rc){
+int spline(float *LJ_LUT, int k, float *vec_pos, float rc){
     /* Introduce el spline para suavizar la curva */
     int p = k/10; // Pasos anteriores a rc donde empieza el spline
     float x1 = vec_pos[k-p]; // posicion donde empieza el spline

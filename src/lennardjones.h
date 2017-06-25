@@ -35,7 +35,7 @@ float lennardjones(float r);
  * rc: (float) Distancia de corte para el potencial
  *
  */
-float spline(float *LJ_LUT, int k, float *vec_pos, float rc);
+int spline(float *LJ_LUT, int k, float *vec_pos, float rc);
 
 /*
  * Funcion: t
