@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     float rc = 0.5*L; // Maxima influencia del potencial
     float h = 0.001; // Intervalo de tiempo entre simulaciones
     int niter = 2000; // Nro de veces que se deja evolucionar
-    float T = 1.5; // Temperatura 0.728
+    float T = 2.0; // Temperatura 0.728
     int i; // Indices para loopear
 
     // Aloja memoria para los vectores
@@ -24,6 +24,8 @@ int main(int argc, char **argv) {
     float *fza_aux = (float *)malloc(3*N*sizeof(float));
     float *lambda = (float *)malloc(niter*sizeof(float));
 
+    srand(time(NULL));
+
     // Inicializa la caja con las N partiuclas
     llenar(pos, N, L);
     velocidades(vel, N, T);
@@ -32,10 +34,10 @@ int main(int argc, char **argv) {
         verlet(pos, vel, &fza, &fza_aux, N, L, h, rc);
         if(i % 10 == 0) {
             for(int k = 0; k < N; k ++) {
-                printf("%f\t%f\t%f\n", pos[3*k],pos[3*k + 1],pos[3*k + 2]);
+                printf("%f\t%f\t%f\n", pos[3 * k], pos[3 * k + 1], pos[3 * k + 2]);
             }
         }
-        // printf("%f\t%f\t%f\n", pos[6],pos[7],pos[8]);
+
         lambda[i] = lambda_verlet (pos, N, L);
     }
 
