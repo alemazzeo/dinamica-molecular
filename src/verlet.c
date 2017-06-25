@@ -62,15 +62,20 @@ int nueva_vel(float *vel, float *fza, float *fza0, int n, float h)
 int nueva_fza(float *pos, float *fza, int n, float rc) {
     int i, j, k;
     float dist, rij, fuerza, radial;
+
+    //inicializo las fuerzas a cero
+    for(i = 0; i < 3 * n; i++) {
+        fza[i] = 0;
+    }
+
     for(i = 0; i < n - 1; i++) {
         for(j = i + 1; j < n; j++) {
             // distancia entre particulas
-            rij = pow(pos[i * n] - pos[j * n], 2) + pow(pos[i * n + 1] - pos[j * n + 1], 2) + pow(pos[i * n + 2] - pos[j * n + 2], 2);
-            if (rij < rc) {
-                radial = (24 / rij) * (2 * pow(rij, -6) - pow(rij, -3));  // parte radial de la fuerza
-                //en x
+            rij = (pos[i * 3] - pos[j * 3]) * (pos[i * 3] - pos[j * 3]) + (pos[i * 3 + 1] - pos[j * 3 + 1]) * (pos[i * 3 + 1] - pos[j * 3 + 1]) + (pos[i * 3 + 2] - pos[j * 3 + 2]) * (pos[i * 3 + 2] - pos[j * 3 + 2]);
+            if (rij < rc*rc) {
+                radial = (24 / pow(rij, 0.5)) * (2 * pow(rij, -6) - pow(rij, -3));  // parte radial de la fuerza
                 for(k = 0; k < 3; k++) {
-                    dist =  pos[i * n + k] - pos[j * n + k];
+                    dist =  pos[i * 3 + k] - pos[j * 3 + k];
                     fuerza = radial * dist;
                     fza[i * 3 + k] += fuerza; //le sumo la fza a la particula i
                     fza[j * 3 + k] += -fuerza; //por simetria
