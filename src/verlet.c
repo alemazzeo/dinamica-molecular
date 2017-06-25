@@ -73,19 +73,19 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc) {
     for(i = 0; i < n - 1; i++) {
         for(j = i + 1; j < n; j++) {
 
-	    // Verifica si las partículas interaccionan teniendo
-	    // en cuenta las condiciones de contorno
-	    // En caso afirmativo guarda en pos_interaccion la posición
-	    // de la particula que cumple rij < rc
-	    
+    	    // Verifica si las partículas interaccionan teniendo
+    	    // en cuenta las condiciones de contorno
+    	    // En caso afirmativo guarda en pos_interaccion la posición
+    	    // de la particula que cumple rij < rc
+
             if (par_interaccion(&pos[i*3], &pos[j*3], pos_interaccion, L, rc)) {
 
-		// Calcula rij
-		rij = distancia2(&pos[i*3], pos_interaccion);
+        		// Calcula rij
+        		rij = distancia2(&pos[i*3], pos_interaccion);
 
-		// parte radial de la fuerza
+        		// parte radial de la fuerza
                 radial = (24 / pow(rij, 0.5)) * (2 * pow(rij, -6) - pow(rij, -3));
-		
+
                 for(k = 0; k < 3; k++) {
                     dist =  pos[i * 3 + k] - pos_interaccion[k];
                     fuerza = radial * dist;
@@ -110,21 +110,21 @@ int par_interaccion(float *pos_fija, float *pos_movil,
     // Revisa los 27 cuadrantes vecinos en busca
     // de una distancia menor a rc
     // Para cada variable toma X-L, X, X+L
-    
+
     for(int i=0; i<3; i++){
 	r[0] = pos_movil[0] + (i - 1) * L;
-	
+
 	for(int j=0; j<3; j++){
 	    r[1] = pos_movil[1] + (j - 1) * L;
-	    
+
 	    for(int k=0; k<3; k++){
 		r[2] = pos_movil[2] + (k - 1) * L;
 
 		// Calcula la distancia cuadrada entre la partícula
 		// desplazada (o no) y la partícula fija
 		// y la compara con rc.
-		
-		if(distancia2(r, pos_fija) < rc2){ 
+
+		if(distancia2(r, pos_fija) < rc2){
 		    pos_interaccion[0] = r[0];
 		    pos_interaccion[1] = r[1];
 		    pos_interaccion[2] = r[2];
