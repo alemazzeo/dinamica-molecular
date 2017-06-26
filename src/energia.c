@@ -6,17 +6,16 @@ float energia(float *pos, float *vel, int n)
     float energia=0;
 
     // Calcula la energia de las n particulas
-    for(int i=0; i<n; i++)
-    {
-	// suma la energía cinética
-	energia += velocidad2(&pos[i*3]) / (2 * M);
+    for(int i=0; i<n; i++){
+    	// suma la energía cinética
+    	energia += velocidad2(&vel[i*3]) / (2 * M);
 
-	// i<j para no repetir la misma interacción
-	for (int j=i+1; j<n; j++)
-	{
-	    // suma la energía de la interacción
-	    energia += potencial(&pos[i*3], &pos[j*3]);
-	}
+    	// i<j para no repetir la misma interacción
+    	for (int j=i+1; j<n; j++)
+    	{
+    	    // suma la energía de la interacción
+    	    energia += potencial(&pos[i*3], &pos[j*3]);
+    	}
     }
     return energia;
 }

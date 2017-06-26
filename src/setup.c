@@ -10,7 +10,7 @@ int llenar (float *pos, float N, float L){
     float p,a;
     p = pow(N, (double)1/3); //raiz cubica del numero de particulas
     n = floor(p); // parte entera de p.
-    a = L/N; // Distancia entre particulas
+    a = L/n; // Distancia entre particulas
     float r = p - n; // r es la parte decimal de p
     // si r < 0.5 acomodo las particulas en la caja y las que sobra las distribuyo después.
     if (r < 0.5) {
@@ -19,6 +19,16 @@ int llenar (float *pos, float N, float L){
         for (k=0;k<n;k++){
             for (j=0;j<n;j++){
                 for (i=0;i<n;i++){
+                    /*
+                    Propuesta para simplificar esta funcion:
+                    En vez de analizar todos los casos, cuando se calcula
+                    la raiz cubica de N, redondear para arriba en vez de para
+                    abajo, es decir que n = ceil(p). Llenar igual que antes pero
+                    parar cuando te quedas sin particulas. Van a quedar lugares
+                    vacios, pero no importa.
+                    */
+                    //Chequea si me pase de las particulas que tengo disponibles
+                    //if(k*n*n + j*n + i < N) {hacer lo de abajo}
                     pos [3*i + (3*n)*j + (3*n*n)*k] = (a/2) + i*a;
                     pos [1 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + j*a;
                     pos [2 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + k*a;
