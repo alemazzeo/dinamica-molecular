@@ -34,6 +34,7 @@ int nueva_pos(float *pos, float *vel, float *fza, int n, float h, float L)
     // Calcula las 3n coordenadas espaciales
     for(int i=0; i<3*n; i++){
       pos[i] = pos[i] + vel[i] * h + 0.5 * fza[i] * h * h / M;
+      //printf("%f\n", pos[i]);
     }
 
     // Aplica condiciones de contorno
@@ -55,6 +56,7 @@ int nueva_vel(float *vel, float *fza, float *fza0, int n, float h)
     for(int i=0; i<3*n; i++)
     {
 	vel[i] = vel[i] + (fza[i] + fza0[i]) * h / (2 * M);
+    //printf("%f\n", vel[i]);
     }
 
     return 0;

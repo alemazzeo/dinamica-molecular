@@ -6,6 +6,13 @@
 #include "setup.h"
 
 int llenar (float *pos, float N, float L){
+
+    FILE *output = fopen("output.txt", "w");
+    if (output == NULL)
+        {
+              printf("Error opening file!\n");
+              exit(1);
+        }
     int n,i,j,k,s;
     float p,a;
     p = pow(N, (double)1/3); //raiz cubica del numero de particulas
@@ -29,7 +36,7 @@ int llenar (float *pos, float N, float L){
 
   //Veo los casos de las particulas que sobran
   // s<=n: Entran en un eje
-        if (s<=n) {
+        if (s<n) {
             for (i=0;i<s;i++) {
                 pos [3*(n*n*n) + 3*i] = a + i*a;
                 pos [1 + 3*(n*n*n) + 3*i] = a;
@@ -74,6 +81,10 @@ int llenar (float *pos, float N, float L){
             }
         }
 }
+
+    for (i=0;i<N;i++){
+        fprintf(output, "%f\t%f\t%f\n", pos[3*i], pos[3*i+1], pos[3*i+2]);
+    }
 
     return 0;
 
