@@ -1,9 +1,10 @@
 #include "verlet.h"
 #include "energia.h"
+#include "lennardjones.h"
 #include "math.h"
 
 int verlet(float *pos, float *vel, float **fza, float **fza_aux,
-	   int n, float L, float h, float rc)
+	   int n, float L, float h, float rc, float *FZA_LUT, int g)
 {
     float *swap; // Puntero auxiliar para intercambiar las fuerzas
 
@@ -11,7 +12,7 @@ int verlet(float *pos, float *vel, float **fza, float **fza_aux,
     nueva_pos(pos, vel, *fza, n, h, L);
 
     // Calcula la nueva fuerza y la escribe en el vector fza_aux
-    nueva_fza(pos, *fza_aux, n, L, rc);
+    nueva_fza(pos, *fza_aux, n, L, rc, FZA_LUT, g);
 
     // Calcula la nueva velocidad con la fuerza nueva y la original
     nueva_vel(vel, *fza_aux, *fza, n, h);
@@ -60,9 +61,10 @@ int nueva_vel(float *vel, float *fza, float *fza0, int n, float h)
     return 0;
 }
 
-int nueva_fza(float *pos, float *fza, int n, float L, float rc) {
+int nueva_fza(float *pos, float *fza, int n, float L, float rc,
+            float *FZA_LUT, int g) {
     int i, j, k;
-    float dist, rij, fuerza, radial;
+    float dist, rij, rij2, fuerza, radial;
     float pos_interaccion[3];
 
     //inicializo las fuerzas a cero
@@ -81,14 +83,16 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc) {
             if (par_interaccion(&pos[i*3], &pos[j*3], pos_interaccion, L, rc)) {
 
         		// Calcula rij
-        		rij = distancia2(&pos[i*3], pos_interaccion);
+        		rij2 = distancia2(&pos[i*3], pos_interaccion);
+                rij = sqrt(rij2);
 
         		// parte radial de la fuerza
-                radial = (24 / pow(rij, 0.5)) * (2 * pow(rij, -6) - pow(rij, -3));
+                //radial = (24 / pow(rij2, 0.5)) * (2*pow(rij2, -6)-pow(rij2, -3));
+                radial = lookup(FZA_LUT, g, rij);
 
                 for(k = 0; k < 3; k++) {
                     dist =  pos[i * 3 + k] - pos_interaccion[k];
-                    fuerza = radial * dist;
+                    fuerza = radial * dist / rij;
                     fza[i * 3 + k] += fuerza; //le sumo la fza a la particula i
                     fza[j * 3 + k] += -fuerza; //por simetria
                 }
@@ -114,26 +118,26 @@ int par_interaccion(float *pos_fija, float *pos_movil,
     for(int i=0; i<3; i++){
 	r[0] = pos_movil[0] + (i - 1) * L;
 
-	for(int j=0; j<3; j++){
-	    r[1] = pos_movil[1] + (j - 1) * L;
+    	for(int j=0; j<3; j++){
+    	    r[1] = pos_movil[1] + (j - 1) * L;
 
-	    for(int k=0; k<3; k++){
-		r[2] = pos_movil[2] + (k - 1) * L;
+    	    for(int k=0; k<3; k++){
+        		r[2] = pos_movil[2] + (k - 1) * L;
 
-		// Calcula la distancia cuadrada entre la partícula
-		// desplazada (o no) y la partícula fija
-		// y la compara con rc.
+        		// Calcula la distancia cuadrada entre la partícula
+        		// desplazada (o no) y la partícula fija
+        		// y la compara con rc.
 
-		if(distancia2(r, pos_fija) < rc2){
-		    pos_interaccion[0] = r[0];
-		    pos_interaccion[1] = r[1];
-		    pos_interaccion[2] = r[2];
+        		if(distancia2(r, pos_fija) < rc2){
+        		    pos_interaccion[0] = r[0];
+        		    pos_interaccion[1] = r[1];
+        		    pos_interaccion[2] = r[2];
 
-		    // Devuelve 1 para avisar que hay interacción
-		    return 1;
-		}
-	    }
-	}
+        		    // Devuelve 1 para avisar que hay interacción
+        		    return 1;
+        		}
+    	    }
+    	}
     }
 
     // Caso contrario devuelve 0

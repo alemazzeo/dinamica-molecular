@@ -1,9 +1,11 @@
 #include <math.h>
 #include "energia.h"
+#include "lennardjones.h"
 
-float energia(float *pos, float *vel, int n)
+float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc)
 {
     float energia=0;
+    float rij2, rij;
 
     // Calcula la energia de las n particulas
     for(int i=0; i<n; i++){
@@ -13,8 +15,12 @@ float energia(float *pos, float *vel, int n)
     	// i<j para no repetir la misma interacción
     	for (int j=i+1; j<n; j++)
     	{
+            rij2 = distancia2(&pos[i*3], &pos[j*3]);
+            rij = sqrt(rij2);
     	    // suma la energía de la interacción
-    	    energia += potencial(&pos[i*3], &pos[j*3]);
+            if(rij < rc){
+                energia += lookup(LJ_LUT, g, rij);
+            }
     	}
     }
     return energia;
