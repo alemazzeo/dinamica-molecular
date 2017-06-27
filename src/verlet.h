@@ -53,17 +53,51 @@ int nueva_pos(float *pos, float *vel, float *fza, int n, float h, float L);
 int nueva_vel(float *vel, float *fza, float *fza0, int n, float h);
 
 /*
- * Función: energia
+ * Función: c_cont
  * ----------------
- * Calcula la energia mediante el hamiltoniano.
+ * Aplica las condiciones de contorno periodicas a todas las partículas.
  *
  * pos: (float *) Vector de dimensión 3N para las posiciones.
- * vel: (float *) Vector de dimensión 3N para las velocidades.
- * n: Cantidad de particulas
+ * N: (int) Cantidad de particulas
+ * L: (float) Tamano de la caja
+ *
  */
-
-
 int c_cont(float *pos, int N, float L);
-int nueva_fza(float *pos, float *fza, int n, float rc);
+
+/*
+ * Función: nueva_fza
+ * ------------------
+ * Calcula la nueva fuerza.
+ *
+ * pos: (float *) Vector de dimensión 3N para las posiciones.
+ * fza: (float *) Vector de dimensión 3N para las fuerzas.
+ * n: (int) Cantidad de particulas
+ * L: (float) Tamano de la caja
+ * rc: (float) Distancia de corte para el potencial
+ */
+int nueva_fza(float *pos, float *fza, int n, float L, float rc);
+
+/*
+ * Función: par_interaccion
+ * ------------------------
+ * Verifica si dos partículas interactuan teniendo en cuenta las
+ * condiciones de contorno.
+ *
+ * Utiliza una de las dos particulas analizadas como referencia
+ * (pos_fija) y calcula la distancia moviendo la otra.
+ * En caso de encontrar un par de interacción devuelve la
+ * posición de la partícula que interactúa (puede estar fuera)
+ * y devuelve un 1 (la función puede actuar como condición)
+ *
+ * pos_fija: (float *) Posición de la partícula fija.
+ * pos_movil: (float *) Posición de la partícula móvil.
+ * pos_interaccion: (float *) Posición resultante en caso positivo.
+ * L: (float) Tamano de la caja
+ * rc: (float) Distancia de corte para el potencial
+ *
+ * return: 1 si rij < rc
+ */
+int par_interaccion(float *pos_fija, float *pos_movil,
+		    float *pos_interaccion, float L, float rc);
 
 #endif

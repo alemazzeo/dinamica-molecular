@@ -6,17 +6,16 @@ float energia(float *pos, float *vel, int n)
     float energia=0;
 
     // Calcula la energia de las n particulas
-    for(int i=0; i<n; i++)
-    {
-	// suma la energía cinética
-	energia += velocidad2(&pos[i*3]) / (2 * M);
+    for(int i=0; i<n; i++){
+    	// suma la energía cinética
+    	energia += velocidad2(&vel[i*3]) / (2 * M);
 
-	// i<j para no repetir la misma interacción
-	for (int j=i+1; j<n; j++)
-	{
-	    // suma la energía de la interacción
-	    energia += potencial(&pos[i*3], &pos[j*3]);
-	}
+    	// i<j para no repetir la misma interacción
+    	for (int j=i+1; j<n; j++)
+    	{
+    	    // suma la energía de la interacción
+    	    energia += potencial(&pos[i*3], &pos[j*3]);
+    	}
     }
     return energia;
 }
@@ -61,12 +60,14 @@ float potencial(float *pos_i, float *pos_j)
 
 float lambda_verlet (float *pos, float N, float L) {
     int i;
-    float pi,a, lx, ly, lz, l, b;
-    pi = 3;
+    float a, lx, ly, lz, l, b;
     a = L/N; //separacion entre partículas
-    b = (2*pi)/a; // parte del argumento de coseno
+    b = (2*M_PI)/a; // parte del argumento de coseno
+    lx = 0;
+    ly = 0;
+    lz = 0;
         //calculo lambda x : lx, lamba y :ly y lambda z : lz.
-    for (i=0; i<N;i++) {
+    for (i=0; i<=N-2;i++) {
         lx += cos (b*(pos[3*i]-(a/2)));
         ly += cos (b*(pos[3*i+1]-(a/2)));
         lz += cos (b*(pos[3*i+2]-(a/2)));
@@ -76,4 +77,21 @@ float lambda_verlet (float *pos, float N, float L) {
     lz =  (lz/N);
     l = (lx+ly+lz)/3; // lambda total
     return l;
+}
+
+
+float Hboltzmann (float *vel, float N, float T){
+    int i;
+    float h;
+    h = 0;
+    for (i=0;i<3*N;i++) {
+        h += funcionH (vel[i],T);
+    }
+    return h;
+}
+
+float funcionH (float vel, float T) {
+    float f;
+    f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel)/ 2*T);
+    return f * log(f) * 0.05;
 }
