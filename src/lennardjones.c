@@ -74,3 +74,17 @@ int fuerza_lut(float *FZA_LUT, float *LJ_LUT, int k, float rc){
 
     return 0;
 }
+
+
+int indice_lut(int g, float r){
+    // Devuelve el indice a donde mirar en la LUT
+    return floor(r*g);
+}
+
+float lookup(float *LUT, int g, float r){
+    // Calcula el valor en una LUT segun la distancia r
+    int indice = indice_lut(g, r);
+
+    // Version simple, agarra el valor de la izquierda
+    return LUT[indice];
+}

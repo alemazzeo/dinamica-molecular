@@ -63,4 +63,7 @@ float t(float x, float x1, float x2);
  */
 int fuerza_lut(float *FZA_LUT, float *LJ_LUT, int k, float rc);
 
+int indice_lut(int g, float r);
+float lookup(float *LUT, int g, float r);
+
 #endif

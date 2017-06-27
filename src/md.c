@@ -10,18 +10,21 @@
 
 int main(int argc, char **argv) {
     int N = 512; // Nr de particulas
-    float rho = 0.844; //Densidad
-    float L = pow(N/rho, (double)1/3); // Longitud de la caja (el doble de rc)
+    float rho = 0.8442; //Densidad
+    float L = pow(N/rho, (double)1/3); // Longitud de la caja
     float rc = 0.5*L; // Maxima influencia del potencial
     float h = 0.001; // Intervalo de tiempo entre simulaciones
-    int niter = 10; // Nro de veces que se deja evolucionar
-    float T = 0.1; // Temperatura
-    int g = 2000; // Tamano de la Lookup-table
+    int niter = 2000; // Nro de veces que se deja evolucionar
+    float T = 2.0; // Temperatura
+    int g = 1000; // Precision de LUT (1/g)
     int i; // Indices para loopear
 
+    // NO CAMBIAR ESTO:
+    int long_lut = floor(g*rc); // Tamano de la Lookup-table
+
     // Aloja memoria para los vectores
-    float *LJ_LUT = (float *)malloc(g*sizeof(float));
-    float *FZA_LUT = (float *)malloc(g*sizeof(float));
+    float *LJ_LUT = (float *)malloc(long_lut*sizeof(float));
+    float *FZA_LUT = (float *)malloc(long_lut*sizeof(float));
     float *pos = (float *)malloc(3*N*sizeof(float));
     float *vel = (float *)malloc(3*N*sizeof(float));
     float *fza = (float *)malloc(3*N*sizeof(float));
@@ -31,29 +34,18 @@ int main(int argc, char **argv) {
     srand(time(NULL));
 
     // Creo las LUT para el potencial y para la fuerza
-    lennardjones_lut(LJ_LUT, g, rc);
-    fuerza_lut(FZA_LUT, LJ_LUT, g, rc);
-
+    lennardjones_lut(LJ_LUT, long_lut, rc);
+    fuerza_lut(FZA_LUT, LJ_LUT, long_lut, rc);
 
     // Inicializa la caja con las N partiuclas
     llenar(pos, N, L);
     velocidades(vel, N, T);
 
-    /*for(int k = 0; k < N; k++) {
-      printf("%f\t%f\t%f\n", pos[3*k], pos[3*k+1], pos[3*k+2]);
-  }*/
-    // printf("%f\n", lambda_verlet(pos, N, L));
-
     for(i=0;i<niter;i++){
-
-        if(i % 10 == 0) {
-            for(int k = 0; k < N; k++) {
-                printf("%f\t%f\t%f\n", pos[3*k], pos[3*k+1], pos[3*k+2]);
-            }
-            printf("\n");
-        }
-
-        verlet(pos, vel, &fza, &fza_aux, N, L, h, rc);
+        primer_paso(pos, vel, fza, N, h);
+        nueva_fza(pos, fza, N, L, rc, FZA_LUT, g);
+        ultimo_paso(vel, fza, N, h);
+        c_cont(pos, N, L);
 
         printf("%f\n", Hboltzmann(vel, N, T));
 
@@ -64,25 +56,11 @@ int main(int argc, char **argv) {
     }
 
 
-    /*for (i=0;i<niter;i++) {
-        printf("%f\n", lambda[i]);
-    }*/
+    // Imprime posicion acutal de primer particula
+    //printf("%f\t%f\t%f\n", pos[0], pos[1], pos[2]);
 
-
-        // Imprime posicion acutal de primer particula
-        //printf("%f\t%f\t%f\n", pos[0], pos[1], pos[2]);
-
-        // Imprime energia actual en pantalla
-        //printf("%f\n", energia(pos, vel, N));
-
-
-
-
-    // printf("\n\nlambda values\n\n");
-    //
-    // for (i=0;i<niter;i++) {
-    //     printf("%f\n", lambda[i]);
-    // }
+    // Imprime energia actual en pantalla
+    printf("%f\n", energia(pos, vel, N, LJ_LUT, g, rc));
 
 
     free(LJ_LUT);

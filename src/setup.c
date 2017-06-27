@@ -6,13 +6,6 @@
 #include "setup.h"
 
 int llenar (float *pos, float N, float L){
-
-    FILE *output = fopen("output.txt", "w");
-    if (output == NULL)
-        {
-              printf("Error opening file!\n");
-              exit(1);
-        }
     int n,i,j,k;
     float p,a;
     p = pow(N, (double)1/3); //raiz cubica del numero de particulas
@@ -20,20 +13,20 @@ int llenar (float *pos, float N, float L){
     printf("%d\n", n);
     a = L/n; // Distancia entre particulas
 
-        //Acomodo las particulas. El for en i es para la coordenada x, el de j para y y el de k para z.
-        for (k=0;k<n;k++){
-            for (j=0;j<n;j++){
-                for (i=0;i<n;i++){
+    //Acomodo las particulas. El for en i es para la coordenada x, el de j para y y el de k para z.
+    for (k=0;k<n;k++){
+        for (j=0;j<n;j++){
+            for (i=0;i<n;i++){
 
-                    //Chequea si me pase de las particulas que tengo disponibles
-                    if(k*n*n + j*n + i < N) {
-                        pos [3*i + (3*n)*j + (3*n*n)*k] = (a/2) + i*a;
-                        pos [1 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + j*a;
-                        pos [2 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + k*a;
-                    }
+                //Chequea si me pase de las particulas que tengo disponibles
+                if(k*n*n + j*n + i < N) {
+                    pos [3*i + (3*n)*j + (3*n*n)*k] = (a/2) + i*a;
+                    pos [1 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + j*a;
+                    pos [2 + 3*i + (3*n)*j + (3*n*n)*k] = (a/2) + k*a;
                 }
             }
         }
+    }
 
     return 0;
 

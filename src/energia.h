@@ -14,7 +14,7 @@
  * vel: (float *) Vector de dimensión 3N para las velocidades.
  * n: Cantidad de particulas
  */
-float energia(float *pos, float *vel, int n);
+float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc);
 
 /*
  * Función: velocidad2

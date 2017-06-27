@@ -23,7 +23,7 @@
  * rc: (float) Distancia de corte
  *
  */
-int verlet(float *pos, float *vel, float **fza, float **fza_aux, int n, float L, float h, float rc);
+int verlet(float *pos, float *vel, float **fza, float **fza_aux, int n, float L, float h, float rc, float *FZA_LUT, int g);
 
 /*
  * Función: nueva_pos
@@ -75,7 +75,7 @@ int c_cont(float *pos, int N, float L);
  * L: (float) Tamano de la caja
  * rc: (float) Distancia de corte para el potencial
  */
-int nueva_fza(float *pos, float *fza, int n, float L, float rc);
+int nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, int g);
 
 /*
  * Función: par_interaccion
@@ -99,5 +99,9 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc);
  */
 int par_interaccion(float *pos_fija, float *pos_movil,
 		    float *pos_interaccion, float L, float rc);
+
+int primer_paso(float *pos, float *vel, float *fza, int N, float h);
+int ultimo_paso(float *vel, float *fza, int N, float h);
+
 
 #endif
