@@ -42,21 +42,19 @@ int main(int argc, char **argv) {
     velocidades(vel, N, T);
 
     for(i=0;i<niter;i++){
-        /*
-        if(i % 10 == 0) {
-            for(int k = 0; k < N; k++) {
-                printf("%f\t%f\t%f\n", pos[3*k], pos[3*k+1], pos[3*k+2]);
-            }
-            printf("\n");
-        }*/
 
-        verlet(pos, vel, &fza, &fza_aux, N, L, h, rc, *FZA_LUT, g);
+        //verlet(pos, vel, &fza, &fza_aux, N, L, h, rc, *FZA_LUT, g);
+        primer_paso(pos, vel, fza, N, h);
+        nueva_fza(pos, fza, N, L, rc, FZA_LUT, g);
+        ultimo_paso(vel, fza, N, h);
+        c_cont(pos, N, L);
+
 
         // Imprime posicion acutal de primer particula
         //printf("%f\t%f\t%f\n", pos[0], pos[1], pos[2]);
 
         // Imprime energia actual en pantalla
-        printf("%f\n", energia(pos, vel, N));
+        printf("%f\n", energia(pos, vel, N, LJ_LUT, g, rc));
 
         lambda[i] = lambda_verlet (pos, N, L);
     }

@@ -100,4 +100,8 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, 
 int par_interaccion(float *pos_fija, float *pos_movil,
 		    float *pos_interaccion, float L, float rc);
 
+int primer_paso(float *pos, float *vel, float *fza, int N, float h);
+int ultimo_paso(float *vel, float *fza, int N, float h);
+
+
 #endif
