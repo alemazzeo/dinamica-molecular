@@ -31,33 +31,32 @@ int verlet(float *pos, float *vel, float **fza, float **fza_aux,
     return 0;
 }
 
-int nueva_pos(float *pos, float *vel, float *fza, int n, float h, float L)
-{
-    // Calcula las 3n coordenadas espaciales
-    for(int i=0; i<3*n; i++) {
-        pos[i] = pos[i] + vel[i] * h + 0.5 * fza[i] * h * h / M;
+int primer_paso(float *pos, float *vel, float *fza, int N, float h){
+
+    // Actualiza medio paso para las velocidades
+    // Actualizo las posiciones
+    for(int i=0; i<3*N; i++){
+        vel[i] += 0.5 * fza[i] * h;
+        pos[i] += vel[i] * h;
     }
 
-    // Aplica condiciones de contorno
-    c_cont(pos, n, L);
+    return 0;
+}
+
+int ultimo_paso(float *vel, float *fza, int N, float h){
+    // Hace el segundo medio paso para las velocidades
+    for(int i=0; i<3*N; i++){
+        vel[i] += 0.5 * fza[i] * h;
+    }
 
     return 0;
 }
 
 int c_cont(float *pos, int N, float L){
+    // Aplica condiciones de contorno
     for(int i=0; i<3*N; i++) {
         pos[i] = pos[i] - L*floor(pos[i]/L);
     }
-    return 0;
-}
-
-int nueva_vel(float *vel, float *fza, float *fza0, int n, float h)
-{
-    // Calcula las 3n coordenadas de velocidad
-    for(int i=0; i<3*n; i++) {
-	       vel[i] = vel[i] + (fza[i] + fza0[i]) * h / (2 * M);
-    }
-
     return 0;
 }
 
