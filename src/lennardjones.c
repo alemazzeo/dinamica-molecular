@@ -11,21 +11,18 @@ de la derivada alrededor de rc. */
 
 int lennardjones_lut(float *LJ_LUT, int k, float rc){
     // Genera un vector con las posiciones reales a evaluar
-    float *vec_pos = malloc(k*sizeof(float));
-
-    for(int i=0;i<k;i++){
-        vec_pos[i] = (i+1) * (rc/k);
-    }
 
     // LUT de Lennard-Jones con el shift
     for(int i=0; i<k; i++){
-        LJ_LUT[i] = lennardjones(vec_pos[i]) - lennardjones(rc);
+        LJ_LUT[i] = lennardjones((i+1)*(rc/k)) - lennardjones(rc);
     }
 
     // Crea la spline alrededor de rc
-    spline(LJ_LUT, k, vec_pos, rc);
+    spline(LJ_LUT, k, rc);
 
-    free(vec_pos);
+    for(int i=0; i<k; i=i+50){
+        printf("%f\n", LJ_LUT[i]);
+    }
 
     return 0;
 }
@@ -37,20 +34,20 @@ float lennardjones(float r){
 }
 
 
-int spline(float *LJ_LUT, int k, float *vec_pos, float rc){
+int spline(float *LJ_LUT, int k, float rc){
     /* Introduce el spline para suavizar la curva */
     int p = k/10; // Pasos anteriores a rc donde empieza el spline
-    float x1 = vec_pos[k-p]; // posicion donde empieza el spline
+    float x1 = (k-p+1)*(rc/k); // posicion donde empieza el spline
     float x2 = rc; // posicion donde termina el spline
     float y1 = LJ_LUT[k-p]; // valor en x1
-    float k1 = (LJ_LUT[k-p+1]-LJ_LUT[k-p])/(vec_pos[k-p+1]-vec_pos[k-p]); // Derivada en x1
+    float k1 = (LJ_LUT[k-p+1]-LJ_LUT[k-p])/((k-p+1+1)*(rc/k)-(k-p+1)*(rc/k)); // Derivada en x1
     float a = k1*(x2-x1) + y1;
     float b = -y1;
 
     for(int i=k-p; i<k; i++){
-        LJ_LUT[i] = (1-t(vec_pos[i], x1, x2))*y1 +
-                t(vec_pos[i], x1, x2)*(1-t(vec_pos[i], x1, x2))*
-                (a*(1-t(vec_pos[i], x1, x2))+b*t(vec_pos[i], x1, x2));
+        LJ_LUT[i] = (1-t((i+1)*(rc/k), x1, x2))*y1 +
+                t((i+1)*(rc/k), x1, x2)*(1-t((i+1)*(rc/k), x1, x2))*
+                (a*(1-t((i+1)*(rc/k), x1, x2))+b*t((i+1)*(rc/k), x1, x2));
     }
 
     return 0;

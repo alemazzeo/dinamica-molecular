@@ -45,6 +45,8 @@ def calc_energia(pos, vel, N, lj_lut, g, rc):
     p_pos = pos.ctypes.data_as(flp)
     p_vel = vel.ctypes.data_as(flp)
     p_lj_lut = LJ_LUT.ctypes.data_as(flp)
+    # print pos[0], pos[3], pos[6]
+    # print CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
 
     return CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
 
@@ -127,9 +129,9 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 N = 512
 rho = 0.8442
 h = 0.001
-T = 10.0
+T = 2.0
 g = 1000
-niter = 50
+niter = 5000
 
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0)
@@ -147,6 +149,8 @@ fza = np.zeros(3 * N, dtype=C.c_float)
 LJ_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 FZA_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 
+print LJ_LUT
+
 # Memoria para la energia
 energia = np.zeros(niter, dtype=float)
 
@@ -154,7 +158,9 @@ energia = np.zeros(niter, dtype=float)
 p_lj_lut = LJ_LUT.ctypes.data_as(flp)
 p_fza_lut = FZA_LUT.ctypes.data_as(flp)
 CLIB.lennardjones_lut(p_lj_lut, long_lut, rc)
-CLIB.fuerza_lut(p_lj_lut, p_fza_lut, long_lut, rc)
+CLIB.fuerza_lut(p_fza_lut, p_lj_lut, long_lut, rc)
+
+print LJ_LUT
 
 
 ##############################
@@ -166,5 +172,5 @@ for i in range(niter):
     energia[i] = calc_energia(pos, vel, N, LJ_LUT, g, rc)
 
 fig, ax = plt.subplots(1)
-ax.plot(energia, 'o')
+ax.plot(energia, '.')
 plt.show()

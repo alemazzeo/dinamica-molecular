@@ -27,7 +27,7 @@ float lennardjones(float r);
  */
 
 
-int spline(float *LJ_LUT, int k, float *vec_pos, float rc);
+int spline(float *LJ_LUT, int k, float rc);
 /*
  * Funcion: spline
  * ---------------

@@ -17,8 +17,8 @@ int primer_paso(float *pos, float *vel, float *fza, int N, float h){
 
 int nueva_fza(float *pos, float *fza, int n, float L,
 	      float rc, float *FZA_LUT, int g) {
-    // Calcula la nueva fuerza 
-    
+    // Calcula la nueva fuerza
+
     float rij, rij2, fuerza, radial;
     float dr[3];
 
@@ -32,7 +32,7 @@ int nueva_fza(float *pos, float *fza, int n, float L,
         for(int j=i+1; j<n; j++) {
 
 	    rij2 = 0;
-	    
+
 	    for(int k=0; k<3; k++){
 		// calcula los dk con k = (x, y, z)
 		dr[k] = pos[i*3+k] - pos[j*3+k];
@@ -55,17 +55,17 @@ int nueva_fza(float *pos, float *fza, int n, float L,
             if(rij < rc) {
 
 		// calcula la parte radial de la fuerza mediante la LUT
-                radial = lookup(FZA_LUT, g, rij);
+        radial = lookup(FZA_LUT, g, rij);
 
-                for(int k=0; k<3; k++) {
+        for(int k=0; k<3; k++) {
 
-		    // calcula la componente k
+    	    // calcula la componente k
                     fuerza = radial * dr[k] / rij;
-		    // le suma la fza a la particula i con componente k
+    	    // le suma la fza a la particula i con componente k
                     fza[i * 3 + k] += fuerza;
-		    // idem por simetria
-                    fza[j * 3 + k] += -fuerza; 
-                }
+    	    // idem por simetria
+                    fza[j * 3 + k] += -fuerza;
+            }
             }
         }
     }

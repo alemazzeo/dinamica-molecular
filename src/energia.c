@@ -1,4 +1,6 @@
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "energia.h"
 #include "lennardjones.h"
 
@@ -23,6 +25,7 @@ float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc)
             }
     	}
     }
+    //printf("%f\n", energia);
     return energia;
 }
 
