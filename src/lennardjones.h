@@ -1,9 +1,11 @@
 #ifndef LENNARDJONES_H
 #define LENNARDJONES_H
 
+
+int lennardjones_lut(float *LJ_LUT, int k, float rc);
 /*
  * Funcion: lennardjones_lut
- * ---------------
+ * -------------------------
  * Crea una Lookup-table para el potencial de Lennard-Jones. Lo trunca en r=rc,
  * lo mueve para arriba y suaviza la curva cerca de rc.
  *
@@ -12,18 +14,20 @@
  * rc: (float) Distancia de corte para el potencial
  *
  */
-int lennardjones_lut(float *LJ_LUT, int k, float rc);
 
+
+float lennardjones(float r);
 /*
  * Funcion: lennardjones
- * ---------------
+ * ---------------------
  * Evalua analiticamente el potencial de Lennard-Jones.
  *
  * r: (float) Distancia entre dos particulas.
  *
  */
-float lennardjones(float r);
 
+
+int spline(float *LJ_LUT, int k, float *vec_pos, float rc);
 /*
  * Funcion: spline
  * ---------------
@@ -35,11 +39,12 @@ float lennardjones(float r);
  * rc: (float) Distancia de corte para el potencial
  *
  */
-int spline(float *LJ_LUT, int k, float *vec_pos, float rc);
 
+
+float t(float x, float x1, float x2);
 /*
  * Funcion: t
- * ---------------
+ * ----------
  * Funcion auxiliar para facilitar el calculo del spline.
  *
  * x: (float) Distancia actual.
@@ -47,11 +52,12 @@ int spline(float *LJ_LUT, int k, float *vec_pos, float rc);
  * x2: (float) Posicion donde termina el spline
  *
  */
-float t(float x, float x1, float x2);
 
+
+int fuerza_lut(float *FZA_LUT, float *LJ_LUT, int k, float rc);
 /*
  * Funcion: fuerza_lut
- * ---------------
+ * -------------------
  * Crea una Lookup-table de la fuerza haciendo la derivada de Lennard-Jones
  * usando la LUT ya creada y usando diferencia finita.
  *
@@ -61,9 +67,30 @@ float t(float x, float x1, float x2);
  * rc: (float) Distancia de corte para el potencial
  *
  */
-int fuerza_lut(float *FZA_LUT, float *LJ_LUT, int k, float rc);
+
 
 int indice_lut(int g, float r);
+/*
+ * Funcion: indice_lut
+ * -------------------
+ * Devuelve el índice para el r recibido en la tabla.
+ *
+ * g: (int) Precisión de la LUT (rc/g)
+ * r: (float) Distancia
+ *
+ */
+
+
 float lookup(float *LUT, int g, float r);
+/*
+ * Funcion: lookup
+ * ---------------
+ * Busca en la LUT especificada el valor correspondiente para el r dado
+ *
+ * LUT: (float *) Lookup-table con precisión rc/g.
+ * g: (int) Precisión de la LUT (dr=1/g)
+ * r: (float) Distancia
+ *
+ */
 
 #endif

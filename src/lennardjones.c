@@ -8,19 +8,19 @@ de la derivada alrededor de rc. */
 
 #include "lennardjones.h"
 
+
 int lennardjones_lut(float *LJ_LUT, int k, float rc){
-    int i;
-    // Genero un vector con las posiciones reales a evaluar
+    // Genera un vector con las posiciones reales a evaluar
     float *vec_pos = malloc(k*sizeof(float));
-    for(i=0;i<k;i++){
+
+    for(int i=0;i<k;i++){
         vec_pos[i] = (i+1) * (rc/k);
     }
 
     // LUT de Lennard-Jones con el shift
-    for(i=0; i<k; i++){
+    for(int i=0; i<k; i++){
         LJ_LUT[i] = lennardjones(vec_pos[i]) - lennardjones(rc);
     }
-
 
     // Crea la spline alrededor de rc
     spline(LJ_LUT, k, vec_pos, rc);
@@ -30,10 +30,12 @@ int lennardjones_lut(float *LJ_LUT, int k, float rc){
     return 0;
 }
 
+
 float lennardjones(float r){
     /* Evalua el potencial de Lennard-Jones de forma analitica. */
     return 4*(pow(r, -12) - pow(r, -6));
 }
+
 
 int spline(float *LJ_LUT, int k, float *vec_pos, float rc){
     /* Introduce el spline para suavizar la curva */
@@ -54,10 +56,12 @@ int spline(float *LJ_LUT, int k, float *vec_pos, float rc){
     return 0;
 }
 
+
 float t(float x, float x1, float x2){
     // Funcion auxiliar para facilitar el calculo del spline
     return (x-x1)/(x2-x1);
 }
+
 
 int fuerza_lut(float *FZA_LUT, float *LJ_LUT, int k, float rc){
     float delta_r = rc/k;
@@ -80,6 +84,7 @@ int indice_lut(int g, float r){
     // Devuelve el indice a donde mirar en la LUT
     return floor(r*g);
 }
+
 
 float lookup(float *LUT, int g, float r){
     // Calcula el valor en una LUT segun la distancia r

@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
     float *pos = (float *)malloc(3*N*sizeof(float));
     float *vel = (float *)malloc(3*N*sizeof(float));
     float *fza = (float *)malloc(3*N*sizeof(float));
-    float *fza_aux = (float *)malloc(3*N*sizeof(float));
     float *lambda = (float *)malloc(niter*sizeof(float));
 
     srand(time(NULL));
@@ -68,7 +67,6 @@ int main(int argc, char **argv) {
     free(pos);
     free(vel);
     free(fza);
-    free(fza_aux);
     free(lambda);
 
 }

@@ -10,7 +10,7 @@ float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc)
     // Calcula la energia de las n particulas
     for(int i=0; i<n; i++){
     	// suma la energía cinética
-    	energia += velocidad2(&vel[i*3]) / (2 * M);
+    	energia += velocidad2(&vel[i*3]) / 2;
 
     	// i<j para no repetir la misma interacción
     	for (int j=i+1; j<n; j++)
@@ -51,15 +51,15 @@ float potencial(float *pos_i, float *pos_j)
     // Distancia al cuadrado
     r2 = distancia2(pos_i, pos_j);
 
-    // (Gamma / r) ** 2
-    exp2 = GAMMA * GAMMA / r2;
-    // (Gamma / r) ** 6
+    // (1 / r) ** 2
+    exp2 = 1 / r2;
+    // (1 / r) ** 6
     exp6 = exp2 * exp2 * exp2;
-    // (Gamma / r) ** 12
+    // (1 / r) ** 12
     exp12 = exp6 * exp6;
 
     // Lennard-Jones
-    pot = 4 * EPS * (exp12 - exp6);
+    pot = 4 * (exp12 - exp6);
     return pot;
 }
 
