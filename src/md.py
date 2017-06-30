@@ -18,6 +18,8 @@ CLIB.nueva_fza.argtypes = [flp, flp, C.c_int, C.c_float, C.c_float,
                            flp, C.c_int]
 CLIB.ultimo_paso.argtypes = [flp, flp, C.c_int, C.c_float]
 CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
+CLIB.lennardjones_lut.argtypes = [flp, C.c_int, C.c_float]
+CLIB.fuerza_lut.argtypes = [flp, flp, C.c_int, C.c_float]
 
 ##############################
 # Paso completo de MD
@@ -25,7 +27,7 @@ CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
 
 
 def paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g):
-    ''' Da un paso en la simulación. '''
+    """ Da un paso en la simulacion. """
     p_pos = pos.ctypes.data_as(flp)
     p_vel = vel.ctypes.data_as(flp)
     p_fza = fza.ctypes.data_as(flp)
@@ -59,15 +61,15 @@ def transforma_xyz(vector):
 def llenar_pos(N, L):
     ''' Setup para las posiciones y velocidades iniciales. '''
 
-    # Toma la parte entera de la raiz cúbica de N
+    # Toma la parte entera de la raiz cubica de N
     lado = int(N**(1.0 / 3.0))
-    # Calcula el número de lugares generados
+    # Calcula el numero de lugares generados
     particulas = lado ** 3
-    # Si las particulas no entran en la caja de lado M aumenta su tamaño
+    # Si las particulas no entran en la caja de lado M aumenta su tamano
     if particulas < N:
         lado += 1
 
-    # Calcula la mitad de la separación entre particulas
+    # Calcula la mitad de la separacion entre particulas
     s = L / lado / 2
 
     # Genera un vector
@@ -108,22 +110,23 @@ def ver_pos(pos, vel=None, L=None, ax=None):
     return fig, ax, scatter, quiver
 
 ##############################
-# Configuración
+# Configuracion
 ##############################
 
 
-# Parámetros externos
-N = 27
+# Parametros externos
+N = 512
 rho = 0.8442
 h = 0.001
-T = 10.0
+T = 100.0
 g = 1000
 
-# Parámetros internos
+# Parametros internos
 L = (N / rho)**(1.0 / 3.0)
 rc = 0.5 * L
+long_lut = int(g*rc)
 
-# Configuración inicial de posiciones y velocidades
+# Configuracion inicial de posiciones y velocidades
 pos = llenar_pos(N, L)
 vel = llenar_vel(N, T)
 
@@ -134,9 +137,15 @@ fza = np.zeros(3 * N, dtype=C.c_float)
 LJ_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 FZA_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 
+# Llenar las LUT
+p_lj_lut = LJ_LUT.ctypes.data_as(flp)
+p_fza_lut = FZA_LUT.ctypes.data_as(flp)
+CLIB.lennardjones_lut(p_lj_lut, long_lut, rc)
+CLIB.fuerza_lut(p_lj_lut, p_fza_lut, long_lut, rc)
+
 
 ##############################
-# Animación provisoria
+# Animacion provisoria
 ##############################
 
 plt.ion()
@@ -159,5 +168,8 @@ def actualiza_estado():
 while True:
     ax.cla()
     actualiza_estado()
+    ax.set_xlim([0, L])
+    ax.set_ylim([0, L])
+    ax.set_zlim([0, L])
     plt.draw()
     plt.pause(0.001)
