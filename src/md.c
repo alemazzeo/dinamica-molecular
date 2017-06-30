@@ -46,7 +46,9 @@ int main(int argc, char **argv) {
         ultimo_paso(vel, fza, N, h);
         c_cont(pos, N, L);
 
-        printf("%f\n", Hboltzmann(vel, N, T));
+        //printf("%f\n", Hboltzmann(vel, N, T));
+
+        printf("%f\n", energia(pos, vel, N, LJ_LUT, g, rc));
 
         lambda[i] = lambda_verlet (pos, N, L);
         // if(i%100 == 0) {

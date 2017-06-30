@@ -20,6 +20,9 @@ CLIB.ultimo_paso.argtypes = [flp, flp, C.c_int, C.c_float]
 CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
 CLIB.lennardjones_lut.argtypes = [flp, C.c_int, C.c_float]
 CLIB.fuerza_lut.argtypes = [flp, flp, C.c_int, C.c_float]
+CLIB.energia.argtypes = [flp, flp, C.c_int, flp, C.c_int, C.c_float]
+
+CLIB.energia.restype = C.c_float
 
 ##############################
 # Paso completo de MD
@@ -38,6 +41,12 @@ def paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g):
     CLIB.ultimo_paso(p_vel, p_fza, N, h)
     CLIB.c_cont(p_pos, N, L)
 
+def calc_energia(pos, vel, N, lj_lut, g, rc):
+    p_pos = pos.ctypes.data_as(flp)
+    p_vel = vel.ctypes.data_as(flp)
+    p_lj_lut = LJ_LUT.ctypes.data_as(flp)
+
+    return CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
 
 ##############################
 # Funciones auxiliares
@@ -118,8 +127,9 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 N = 512
 rho = 0.8442
 h = 0.001
-T = 100.0
+T = 10.0
 g = 1000
+niter = 50
 
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0)
@@ -137,6 +147,9 @@ fza = np.zeros(3 * N, dtype=C.c_float)
 LJ_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 FZA_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 
+# Memoria para la energia
+energia = np.zeros(niter, dtype=float)
+
 # Llenar las LUT
 p_lj_lut = LJ_LUT.ctypes.data_as(flp)
 p_fza_lut = FZA_LUT.ctypes.data_as(flp)
@@ -148,28 +161,10 @@ CLIB.fuerza_lut(p_lj_lut, p_fza_lut, long_lut, rc)
 # Animacion provisoria
 ##############################
 
-plt.ion()
-fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-
-ax.set_xlim([0, L])
-ax.set_ylim([0, L])
-ax.set_zlim([0, L])
-
-x, y, z = transforma_xyz(pos)
-scatter = ax.scatter(x, y, z)
-
-
-def actualiza_estado():
+for i in range(niter):
     paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g)
-    x, y, z = transforma_xyz(pos)
-    scatter = ax.scatter(x, y, z)
+    energia[i] = calc_energia(pos, vel, N, LJ_LUT, g, rc)
 
-
-while True:
-    ax.cla()
-    actualiza_estado()
-    ax.set_xlim([0, L])
-    ax.set_ylim([0, L])
-    ax.set_zlim([0, L])
-    plt.draw()
-    plt.pause(0.001)
+fig, ax = plt.subplots(1)
+ax.plot(energia, 'o')
+plt.show()
