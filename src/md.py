@@ -126,10 +126,10 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 
 
 # Parametros externos
-N = 512
+N = 24
 rho = 0.8442
 h = 0.001
-T = 2.0
+T = 100.0
 g = 1000
 niter = 5000
 
@@ -167,10 +167,34 @@ print LJ_LUT
 # Animacion provisoria
 ##############################
 
+
+plt.ion()
+fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+
+ax.set_xlim([0, L])
+ax.set_ylim([0, L])
+ax.set_zlim([0, L])
+
+x, y, z = transforma_xyz(pos)
+scatter = ax.scatter(x, y, z)
+vx, vy, vz = transforma_xyz(vel)
+quiver = ax.quiver(x, y, z, vx, vy, vz)
+
 for i in range(niter):
     paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g)
     energia[i] = calc_energia(pos, vel, N, LJ_LUT, g, rc)
 
-fig, ax = plt.subplots(1)
-ax.plot(energia, '.')
+    ax.cla()
+    x, y, z = transforma_xyz(pos)
+    scatter = ax.scatter(x, y, z)
+    vx, vy, vz = transforma_xyz(vel)
+    quiver = ax.quiver(x, y, z, vx, vy, vz)
+    ax.set_xlim([0, L])
+    ax.set_ylim([0, L])
+    ax.set_zlim([0, L])
+    plt.draw()
+    plt.pause(0.0001)
+
+fig2, ax2 = plt.subplots(1)
+ax2.plot(energia, '.')
 plt.show()
