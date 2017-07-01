@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "energia.h"
 #include "lennardjones.h"
 
@@ -52,9 +53,9 @@ float potencial(float *pos, int N, float L, float *LJ_LUT, int g, float rc){
     return potencial;
 }
 
-float potencial_exacto(float *pos, int N, float L) {
+float potencial_exacto(float *pos, int N, float L, float rc) {
     float potencial=0;
-    float rij2, exp2, exp6, exp12;
+    float rij, rij2, exp2, exp6, exp12;
     float dr[3];
 
     // Calcula la energia potencial de las n particulas
@@ -88,8 +89,11 @@ float potencial_exacto(float *pos, int N, float L) {
             // (1 / r) ** 12
             exp12 = exp6 * exp6;
 
+            rij = sqrt(rij2);
             // Lennard-Jones
-            potencial += 4 * (exp12 - exp6);
+            if(rij < rc){
+                potencial += 4 * (exp12 - exp6);
+            }
         }
     }
 

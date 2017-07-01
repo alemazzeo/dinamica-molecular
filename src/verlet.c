@@ -1,3 +1,5 @@
+#include "stdio.h"
+
 #include "verlet.h"
 #include "energia.h"
 #include "lennardjones.h"
@@ -111,13 +113,12 @@ int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc) {
             if(rij < rc) {
 
                 // calcula la parte radial de la fuerza
-                radial = 24 / rij * (pow(rij, -6) - 2 * pow(rij, -12));
+                radial = -24 * (pow(rij, -7) - 2 * pow(rij, -13));
 
                 for(int k=0; k<3; k++) {
-
                     // calcula la componente k
                     fuerza = radial * dr[k] / rij;
-                    // le suma la fza a la particula i con componente k
+                    // le suma la fuerza a la particula i con componente k
                     fza[i * 3 + k] += fuerza;
                     // idem por simetria
                     fza[j * 3 + k] += -fuerza;

@@ -16,17 +16,20 @@ flp = C.POINTER(C.c_float)
 CLIB.primer_paso.argtypes = [flp, flp, flp, C.c_int, C.c_float]
 CLIB.nueva_fza.argtypes = [flp, flp, C.c_int, C.c_float, C.c_float,
                            flp, C.c_int]
+CLIB.nueva_fza_exacto.argtypes = [flp, flp, C.c_int, C.c_float, C.c_float]
 CLIB.ultimo_paso.argtypes = [flp, flp, C.c_int, C.c_float]
 CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
 CLIB.lennardjones_lut.argtypes = [flp, C.c_int, C.c_float]
 CLIB.fuerza_lut.argtypes = [flp, flp, C.c_int, C.c_float]
-CLIB.energia.argtypes = [flp, flp, C.c_int, flp, C.c_int, C.c_float]
-CLIB.cinetica.argtypes = [flp, C.c_int]
-CLIB.potencial.argtypes = [flp, C.c_int, flp, C.c_int, C.c_float]
 
-CLIB.energia.restype = C.c_float
+CLIB.cinetica.argtypes = [flp, C.c_int]
+CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
+CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
+
+# Return types
 CLIB.cinetica.restype = C.c_float
 CLIB.potencial.restype = C.c_float
+CLIB.potencial_exacto.restype = C.c_float
 
 ##############################
 # Paso completo de MD
@@ -34,7 +37,7 @@ CLIB.potencial.restype = C.c_float
 
 
 def paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g):
-    """ Da un paso en la simulacion. """
+    """ Da un paso en la simulacion usando las LUT. """
     p_pos = pos.ctypes.data_as(flp)
     p_vel = vel.ctypes.data_as(flp)
     p_fza = fza.ctypes.data_as(flp)
@@ -45,12 +48,17 @@ def paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g):
     CLIB.ultimo_paso(p_vel, p_fza, N, h)
     CLIB.c_cont(p_pos, N, L)
 
-def calc_energia(pos, vel, N, lj_lut, g, rc):
+
+def paso_exacto(pos, vel, fza, N, L, h, rc):
+    """ Da un paso en la simulacion de forma exacta. """
     p_pos = pos.ctypes.data_as(flp)
     p_vel = vel.ctypes.data_as(flp)
-    p_lj_lut = LJ_LUT.ctypes.data_as(flp)
+    p_fza = fza.ctypes.data_as(flp)
 
-    return CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
+    CLIB.primer_paso(p_pos, p_vel, p_fza, N, h)
+    CLIB.nueva_fza_exacto(p_pos, p_fza, N, L, rc)
+    CLIB.ultimo_paso(p_vel, p_fza, N, h)
+    CLIB.c_cont(p_pos, N, L)
 
 ##############################
 # Funciones auxiliares
@@ -122,10 +130,10 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 
     return fig, ax, scatter, quiver
 
+
 ##############################
 # Configuracion
 ##############################
-
 
 # Parametros externos
 N = 512
@@ -133,7 +141,7 @@ rho = 0.8442
 h = 0.001
 T = 0.728
 g = 1000
-niter = 10000
+niter = 2000
 
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0)
@@ -184,10 +192,21 @@ scatter = ax.scatter(x, y, z)
 vx, vy, vz = transforma_xyz(vel)
 quiver = ax.quiver(x, y, z, vx, vy, vz)
 
+# Variable auxiliar para elegir si resolver de forma exacta o no.
+exacto = 0
+
 for i in range(niter):
-    paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g)
+    if(exacto):
+        # Exacto
+        paso_exacto(pos, vel, fza, N, L, h, rc)
+        potencial[i] = CLIB.potencial_exacto(p_pos, N, L, rc)
+    else:
+        # Con Lookup-table
+        paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g)
+        potencial[i] = CLIB.potencial(p_pos, N, L, p_lj_lut, g, rc)
+
+
     cinetica[i] = CLIB.cinetica(p_vel, N)
-    potencial[i] = CLIB.potencial(p_pos, N, p_lj_lut, g, rc)
     energia[i] = cinetica[i] + potencial[i]
 
     # ax.cla()

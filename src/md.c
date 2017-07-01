@@ -48,8 +48,6 @@ int main(int argc, char **argv) {
 
         //printf("%f\n", Hboltzmann(vel, N, T));
 
-        printf("%f\n", energia(pos, vel, N, LJ_LUT, g, rc));
-
         lambda[i] = lambda_verlet (pos, N, L);
         // if(i%100 == 0) {
         //     printf("%f\n", lambda_verlet(pos, N, L));
@@ -59,9 +57,6 @@ int main(int argc, char **argv) {
 
     // Imprime posicion acutal de primer particula
     //printf("%f\t%f\t%f\n", pos[0], pos[1], pos[2]);
-
-    // Imprime energia actual en pantalla
-    printf("%f\n", energia(pos, vel, N, LJ_LUT, g, rc));
 
 
     free(LJ_LUT);

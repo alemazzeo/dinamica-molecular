@@ -50,7 +50,7 @@ float distancia2(float *pos_i, float *pos_j);
  */
 
 
-float potencial_exacto(float *pos, int N, float L);
+float potencial_exacto(float *pos, int N, float L, float rc);
 /*
  * Función: potencial
  * ------------------
