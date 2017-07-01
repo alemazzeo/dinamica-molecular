@@ -20,10 +20,6 @@ int lennardjones_lut(float *LJ_LUT, int k, float rc){
     // Crea la spline alrededor de rc
     spline(LJ_LUT, k, rc);
 
-    for(int i=0; i<k; i=i+50){
-        printf("%f\n", LJ_LUT[i]);
-    }
-
     return 0;
 }
 

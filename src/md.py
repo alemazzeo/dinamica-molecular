@@ -21,8 +21,12 @@ CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
 CLIB.lennardjones_lut.argtypes = [flp, C.c_int, C.c_float]
 CLIB.fuerza_lut.argtypes = [flp, flp, C.c_int, C.c_float]
 CLIB.energia.argtypes = [flp, flp, C.c_int, flp, C.c_int, C.c_float]
+CLIB.cinetica.argtypes = [flp, C.c_int]
+CLIB.potencial.argtypes = [flp, C.c_int, flp, C.c_int, C.c_float]
 
 CLIB.energia.restype = C.c_float
+CLIB.cinetica.restype = C.c_float
+CLIB.potencial.restype = C.c_float
 
 ##############################
 # Paso completo de MD
@@ -45,8 +49,6 @@ def calc_energia(pos, vel, N, lj_lut, g, rc):
     p_pos = pos.ctypes.data_as(flp)
     p_vel = vel.ctypes.data_as(flp)
     p_lj_lut = LJ_LUT.ctypes.data_as(flp)
-    # print pos[0], pos[3], pos[6]
-    # print CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
 
     return CLIB.energia(p_pos, p_vel, N, p_lj_lut, g, rc)
 
@@ -126,12 +128,12 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 
 
 # Parametros externos
-N = 24
+N = 512
 rho = 0.8442
 h = 0.001
-T = 100.0
+T = 0.728
 g = 1000
-niter = 5000
+niter = 10000
 
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0)
@@ -149,10 +151,10 @@ fza = np.zeros(3 * N, dtype=C.c_float)
 LJ_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 FZA_LUT = np.zeros(int(g * rc), dtype=C.c_float)
 
-print LJ_LUT
-
 # Memoria para la energia
 energia = np.zeros(niter, dtype=float)
+cinetica = np.zeros(niter, dtype=float)
+potencial = np.zeros(niter, dtype=float)
 
 # Llenar las LUT
 p_lj_lut = LJ_LUT.ctypes.data_as(flp)
@@ -160,7 +162,9 @@ p_fza_lut = FZA_LUT.ctypes.data_as(flp)
 CLIB.lennardjones_lut(p_lj_lut, long_lut, rc)
 CLIB.fuerza_lut(p_fza_lut, p_lj_lut, long_lut, rc)
 
-print LJ_LUT
+# Punteros de las posiciones y velocidades
+p_pos = pos.ctypes.data_as(flp)
+p_vel = vel.ctypes.data_as(flp)
 
 
 ##############################
@@ -182,19 +186,23 @@ quiver = ax.quiver(x, y, z, vx, vy, vz)
 
 for i in range(niter):
     paso(pos, vel, fza, N, L, h, rc, FZA_LUT, g)
-    energia[i] = calc_energia(pos, vel, N, LJ_LUT, g, rc)
+    cinetica[i] = CLIB.cinetica(p_vel, N)
+    potencial[i] = CLIB.potencial(p_pos, N, p_lj_lut, g, rc)
+    energia[i] = cinetica[i] + potencial[i]
 
-    ax.cla()
-    x, y, z = transforma_xyz(pos)
-    scatter = ax.scatter(x, y, z)
-    vx, vy, vz = transforma_xyz(vel)
-    quiver = ax.quiver(x, y, z, vx, vy, vz)
-    ax.set_xlim([0, L])
-    ax.set_ylim([0, L])
-    ax.set_zlim([0, L])
-    plt.draw()
-    plt.pause(0.0001)
+    # ax.cla()
+    # x, y, z = transforma_xyz(pos)
+    # scatter = ax.scatter(x, y, z)
+    # vx, vy, vz = transforma_xyz(vel)
+    # quiver = ax.quiver(x, y, z, vx, vy, vz)
+    # ax.set_xlim([0, L])
+    # ax.set_ylim([0, L])
+    # ax.set_zlim([0, L])
+    # plt.draw()
+    # plt.pause(0.0001)
 
 fig2, ax2 = plt.subplots(1)
-ax2.plot(energia, '.')
+ax2.plot(energia, 'k.')
+ax2.plot(cinetica, 'r.')
+ax2.plot(potencial, 'b.')
 plt.show()

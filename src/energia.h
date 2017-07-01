@@ -13,6 +13,29 @@ float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc);
  * n: Cantidad de particulas
  */
 
+float cinetica(float *vel, int N);
+/*
+* Función: cinetica
+* ----------------
+* Calcula la energia cinetica.
+*
+* pos: (float *) Vector de dimensión 3N para las posiciones.
+* n: Cantidad de particulas
+*/
+
+float potencial(float *pos, int N, float *LJ_LUT, int g, float rc);
+/*
+* Función: potencial
+* ----------------
+* Calcula la energia potencial mediante el potencial de Lennard-Jones.
+*
+* pos: (float *) Vector de dimensión 3N para las posiciones.
+* N: Cantidad de particulas
+* LJ_LUT: (float *) Lookup-table del potencial de Lennard-Jones
+* g: (int) Precision de la Lookup-table
+* rc: Distancia de corte para el potencial
+*/
+
 
 float velocidad2(float *vel);
 /*
@@ -39,7 +62,7 @@ float distancia2(float *pos_i, float *pos_j);
  */
 
 
-float potencial(float *pos_i, float *pos_j);
+float potencial_exacto(float *pos_i, float *pos_j);
 /*
  * Función: potencial
  * ------------------

@@ -29,6 +29,36 @@ float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc)
     return energia;
 }
 
+float cinetica(float *vel, int N){
+    float cinetica = 0;
+    for(int i=0; i<N; i++){
+    	// suma la energía cinética
+    	cinetica += velocidad2(&vel[i*3]) / 2;
+    }
+
+    return cinetica;
+}
+
+float potencial(float *pos, int N, float *LJ_LUT, int g, float rc){
+    float potencial=0;
+    float rij2, rij;
+
+    // Calcula la energia potencial de las n particulas
+    for(int i=0; i<N; i++){
+        // i<j para no repetir la misma interacción
+        for (int j=i+1; j<N; j++)
+        {
+            rij2 = distancia2(&pos[i*3], &pos[j*3]);
+            rij = sqrt(rij2);
+            // suma la energía de la interacción
+            if(rij < rc){
+                potencial += lookup(LJ_LUT, g, rij);
+            }
+        }
+    }
+    return potencial;
+}
+
 float velocidad2(float *vel)
 {
     // Calcula y devuelve el cuadrado de la velocidad
@@ -46,7 +76,7 @@ float distancia2(float *pos_i, float *pos_j)
     return r2;
 }
 
-float potencial(float *pos_i, float *pos_j)
+float potencial_exacto(float *pos_i, float *pos_j)
 {
     // Calcula el potencial de Lennard-Jones
     float r2, pot, exp2, exp6, exp12;
