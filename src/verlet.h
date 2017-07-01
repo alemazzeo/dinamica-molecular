@@ -27,7 +27,22 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, 
 /*
  * Función: nueva_fza
  * ------------------
- * Calcula la nueva fuerza.
+ * Calcula la nueva fuerza usando la Lookup-table.
+ *
+ * pos: (float *) Vector de dimensión 3N para las posiciones.
+ * fza: (float *) Vector de dimensión 3N para las fuerzas.
+ * n: (int) Cantidad de particulas
+ * L: (float) Tamano de la caja
+ * rc: (float) Distancia de corte para el potencial
+ * FZA_LUT: (float *) Lookup-table de la fuerza
+ * g: (int) Precision de la Lookup-table
+ */
+
+int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc);
+/*
+ * Función: nueva_fza_exacto
+ * ------------------
+ * Calcula la nueva fuerza de forma exacta.
  *
  * pos: (float *) Vector de dimensión 3N para las posiciones.
  * fza: (float *) Vector de dimensión 3N para las fuerzas.

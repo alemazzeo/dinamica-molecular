@@ -4,31 +4,6 @@
 #include "energia.h"
 #include "lennardjones.h"
 
-float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc)
-{
-    float energia=0;
-    float rij2, rij;
-
-    // Calcula la energia de las n particulas
-    for(int i=0; i<n; i++){
-    	// suma la energía cinética
-    	energia += velocidad2(&vel[i*3]) / 2;
-
-    	// i<j para no repetir la misma interacción
-    	for (int j=i+1; j<n; j++)
-    	{
-            rij2 = distancia2(&pos[i*3], &pos[j*3]);
-            rij = sqrt(rij2);
-    	    // suma la energía de la interacción
-            if(rij < rc){
-                energia += lookup(LJ_LUT, g, rij);
-            }
-    	}
-    }
-    //printf("%f\n", energia);
-    return energia;
-}
-
 float cinetica(float *vel, int N){
     float cinetica = 0;
     for(int i=0; i<N; i++){
@@ -39,16 +14,34 @@ float cinetica(float *vel, int N){
     return cinetica;
 }
 
-float potencial(float *pos, int N, float *LJ_LUT, int g, float rc){
+float potencial(float *pos, int N, float L, float *LJ_LUT, int g, float rc){
     float potencial=0;
     float rij2, rij;
+    float dr[3];
 
     // Calcula la energia potencial de las n particulas
     for(int i=0; i<N; i++){
         // i<j para no repetir la misma interacción
         for (int j=i+1; j<N; j++)
         {
-            rij2 = distancia2(&pos[i*3], &pos[j*3]);
+            rij2 = 0;
+
+            for(int k=0; k<3; k++){
+                // calcula los dk con k = (x, y, z)
+                dr[k] = pos[i*3+k] - pos[j*3+k];
+
+                // condiciones de contorno para dk
+                if(dr[k] > L/2){
+                    dr[k] -= L;
+                }
+                if(dr[k] < -L/2){
+                    dr[k] += L;
+                }
+
+                // suma las diferencias cuadradas
+                rij2 += dr[k] * dr[k];
+            }
+
             rij = sqrt(rij2);
             // suma la energía de la interacción
             if(rij < rc){
@@ -56,6 +49,50 @@ float potencial(float *pos, int N, float *LJ_LUT, int g, float rc){
             }
         }
     }
+    return potencial;
+}
+
+float potencial_exacto(float *pos, int N, float L) {
+    float potencial=0;
+    float rij2, exp2, exp6, exp12;
+    float dr[3];
+
+    // Calcula la energia potencial de las n particulas
+    for(int i=0; i<N; i++){
+        // i<j para no repetir la misma interacción
+        for (int j=i+1; j<N; j++)
+        {
+            rij2 = 0;
+
+            for(int k=0; k<3; k++){
+                // calcula los dk con k = (x, y, z)
+                dr[k] = pos[i*3+k] - pos[j*3+k];
+
+                // condiciones de contorno para dk
+                if(dr[k] > L/2){
+                    dr[k] -= L;
+                }
+                if(dr[k] < -L/2){
+                    dr[k] += L;
+                }
+
+                // suma las diferencias cuadradas
+                rij2 += dr[k] * dr[k];
+            }
+
+            // suma la energía de la interacción
+            // (1 / r) ** 2
+            exp2 = 1 / rij2;
+            // (1 / r) ** 6
+            exp6 = exp2 * exp2 * exp2;
+            // (1 / r) ** 12
+            exp12 = exp6 * exp6;
+
+            // Lennard-Jones
+            potencial += 4 * (exp12 - exp6);
+        }
+    }
+
     return potencial;
 }
 
@@ -74,26 +111,6 @@ float distancia2(float *pos_i, float *pos_j)
     z = pos_i[2] - pos_j[2];
     r2 = x * x + y * y + z * z;
     return r2;
-}
-
-float potencial_exacto(float *pos_i, float *pos_j)
-{
-    // Calcula el potencial de Lennard-Jones
-    float r2, pot, exp2, exp6, exp12;
-
-    // Distancia al cuadrado
-    r2 = distancia2(pos_i, pos_j);
-
-    // (1 / r) ** 2
-    exp2 = 1 / r2;
-    // (1 / r) ** 6
-    exp6 = exp2 * exp2 * exp2;
-    // (1 / r) ** 12
-    exp12 = exp6 * exp6;
-
-    // Lennard-Jones
-    pot = 4 * (exp12 - exp6);
-    return pot;
 }
 
 

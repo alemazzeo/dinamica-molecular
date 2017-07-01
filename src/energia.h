@@ -1,18 +1,6 @@
 #ifndef ENERGIA_H
 #define ENERGIA_H
 
-
-float energia(float *pos, float *vel, int n, float *LJ_LUT, int g, float rc);
-/*
- * Función: energia
- * ----------------
- * Calcula la energia mediante el hamiltoniano.
- *
- * pos: (float *) Vector de dimensión 3N para las posiciones.
- * vel: (float *) Vector de dimensión 3N para las velocidades.
- * n: Cantidad de particulas
- */
-
 float cinetica(float *vel, int N);
 /*
 * Función: cinetica
@@ -23,7 +11,7 @@ float cinetica(float *vel, int N);
 * n: Cantidad de particulas
 */
 
-float potencial(float *pos, int N, float *LJ_LUT, int g, float rc);
+float potencial(float *pos, int N, float L, float *LJ_LUT, int g, float rc);
 /*
 * Función: potencial
 * ----------------
@@ -62,7 +50,7 @@ float distancia2(float *pos_i, float *pos_j);
  */
 
 
-float potencial_exacto(float *pos_i, float *pos_j);
+float potencial_exacto(float *pos, int N, float L);
 /*
  * Función: potencial
  * ------------------

@@ -16,7 +16,7 @@ int primer_paso(float *pos, float *vel, float *fza, int N, float h){
 }
 
 int nueva_fza(float *pos, float *fza, int n, float L,
-	      float rc, float *FZA_LUT, int g) {
+    float rc, float *FZA_LUT, int g) {
     // Calcula la nueva fuerza
 
     float rij, rij2, fuerza, radial;
@@ -31,41 +31,97 @@ int nueva_fza(float *pos, float *fza, int n, float L,
 
         for(int j=i+1; j<n; j++) {
 
-	    rij2 = 0;
+            rij2 = 0;
 
-	    for(int k=0; k<3; k++){
-		// calcula los dk con k = (x, y, z)
-		dr[k] = pos[i*3+k] - pos[j*3+k];
+            for(int k=0; k<3; k++){
+                // calcula los dk con k = (x, y, z)
+                dr[k] = pos[i*3+k] - pos[j*3+k];
 
-		// condiciones de contorno para dk
-		if(dr[k] > L/2){
-		    dr[k] -= L;
-		}
-		if(dr[k] < -L/2){
-		    dr[k] += L;
-		}
+                // condiciones de contorno para dk
+                if(dr[k] > L/2){
+                    dr[k] -= L;
+                }
+                if(dr[k] < -L/2){
+                    dr[k] += L;
+                }
 
-		// suma las diferencias cuadradas
-		rij2 += dr[k] * dr[k];
-	    }
+                // suma las diferencias cuadradas
+                rij2 += dr[k] * dr[k];
+            }
 
-	    // calcula el módulo de la distancia
-	    rij = sqrt(rij2);
+            // calcula el módulo de la distancia
+            rij = sqrt(rij2);
 
             if(rij < rc) {
 
-		// calcula la parte radial de la fuerza mediante la LUT
-        radial = lookup(FZA_LUT, g, rij);
+                // calcula la parte radial de la fuerza mediante la LUT
+                radial = lookup(FZA_LUT, g, rij);
 
-        for(int k=0; k<3; k++) {
+                for(int k=0; k<3; k++) {
 
-    	    // calcula la componente k
+                    // calcula la componente k
                     fuerza = radial * dr[k] / rij;
-    	    // le suma la fza a la particula i con componente k
+                    // le suma la fza a la particula i con componente k
                     fza[i * 3 + k] += fuerza;
-    	    // idem por simetria
+                    // idem por simetria
                     fza[j * 3 + k] += -fuerza;
+                }
             }
+        }
+    }
+    return 0;
+}
+
+int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc) {
+    // Calcula la nueva fuerza
+
+    float rij, rij2, fuerza, radial;
+    float dr[3];
+
+    //inicializa las fuerzas a cero
+    for(int i=0; i<3*n; i++) {
+        fza[i] = 0;
+    }
+
+    for(int i=0; i<n-1; i++) {
+
+        for(int j=i+1; j<n; j++) {
+
+            rij2 = 0;
+
+            for(int k=0; k<3; k++){
+                // calcula los dk con k = (x, y, z)
+                dr[k] = pos[i*3+k] - pos[j*3+k];
+
+                // condiciones de contorno para dk
+                if(dr[k] > L/2){
+                    dr[k] -= L;
+                }
+                if(dr[k] < -L/2){
+                    dr[k] += L;
+                }
+
+                // suma las diferencias cuadradas
+                rij2 += dr[k] * dr[k];
+            }
+
+            // calcula el módulo de la distancia
+            rij = sqrt(rij2);
+
+            if(rij < rc) {
+
+                // calcula la parte radial de la fuerza
+                radial = 24 / rij * (pow(rij, -6) - 2 * pow(rij, -12));
+
+                for(int k=0; k<3; k++) {
+
+                    // calcula la componente k
+                    fuerza = radial * dr[k] / rij;
+                    // le suma la fza a la particula i con componente k
+                    fza[i * 3 + k] += fuerza;
+                    // idem por simetria
+                    fza[j * 3 + k] += -fuerza;
+                }
             }
         }
     }
