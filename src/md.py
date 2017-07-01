@@ -139,7 +139,7 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 N = 512
 rho = 0.8442
 h = 0.001
-T = 0.728
+T = 10 # 0.728
 g = 1000
 niter = 2000
 
@@ -180,17 +180,17 @@ p_vel = vel.ctypes.data_as(flp)
 ##############################
 
 
-plt.ion()
-fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-
-ax.set_xlim([0, L])
-ax.set_ylim([0, L])
-ax.set_zlim([0, L])
-
-x, y, z = transforma_xyz(pos)
-scatter = ax.scatter(x, y, z)
-vx, vy, vz = transforma_xyz(vel)
-quiver = ax.quiver(x, y, z, vx, vy, vz)
+# plt.ion()
+# fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+#
+# ax.set_xlim([0, L])
+# ax.set_ylim([0, L])
+# ax.set_zlim([0, L])
+#
+# x, y, z = transforma_xyz(pos)
+# scatter = ax.scatter(x, y, z)
+# vx, vy, vz = transforma_xyz(vel)
+# quiver = ax.quiver(x, y, z, vx, vy, vz)
 
 # Variable auxiliar para elegir si resolver de forma exacta o no.
 exacto = 0
@@ -219,6 +219,18 @@ for i in range(niter):
     # ax.set_zlim([0, L])
     # plt.draw()
     # plt.pause(0.0001)
+
+sigma_cinetica = np.std(cinetica[400:])
+sigma_potencial = np.std(potencial[400:])
+sigma_energia = np.std(energia[400:])
+
+avg_cinetica = np.mean(cinetica[400:])
+avg_potencial = np.mean(potencial[400:])
+avg_energia = np.mean(energia[400:])
+
+print avg_potencial, sigma_potencial
+print avg_cinetica, sigma_cinetica
+print avg_energia, sigma_energia
 
 fig2, ax2 = plt.subplots(1)
 ax2.plot(energia, 'k.')
