@@ -36,10 +36,12 @@ int spline(float *LJ_LUT, int k, float rc){
     float x1 = (k-p+1)*(rc/k); // posicion donde empieza el spline
     float x2 = rc; // posicion donde termina el spline
     float y1 = LJ_LUT[k-p]; // valor en x1
-    float k1 = (LJ_LUT[k-p+1]-LJ_LUT[k-p])/((k-p+1+1)*(rc/k)-(k-p+1)*(rc/k)); // Derivada en x1
+    // Derivada en x1
+    float k1 = (LJ_LUT[k-p+1]-LJ_LUT[k-p])/((k-p+1+1)*(rc/k)-(k-p+1)*(rc/k));
     float a = k1*(x2-x1) + y1;
     float b = -y1;
 
+    // Evalua el valor del spline y lo reemplaza en la LUT
     for(int i=k-p; i<k; i++){
         LJ_LUT[i] = (1-t((i+1)*(rc/k), x1, x2))*y1 +
                 t((i+1)*(rc/k), x1, x2)*(1-t((i+1)*(rc/k), x1, x2))*
@@ -81,8 +83,19 @@ int indice_lut(int g, float r){
 
 float lookup(float *LUT, int g, float r){
     // Calcula el valor en una LUT segun la distancia r
-    int indice = indice_lut(g, r);
+
+    int indice = indice_lut(g, r); // Indice en la Lookup-table
 
     // Version simple, agarra el valor de la izquierda
-    return LUT[indice];
+    // return LUT[indice];
+
+    // Version mas complicada: interpola linealmente entre ambos valores
+    float x1 = floor(r*g)/(float)g;
+    float x2 = x1 + (float)1/g;
+    float y1 = LUT[indice];
+    float y2 = LUT[indice + 1];
+    float m = (y2-y1) / (x2-x1);
+    float b = (y1*x2 - x1*y2) / (x2 - x1);
+
+    return m * r + b;
 }
