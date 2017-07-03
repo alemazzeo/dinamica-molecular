@@ -64,7 +64,11 @@ float potencial_exacto(float *pos, int N, float L, float rc);
 
 
 float lambda_verlet (float *pos, float N, float L);
+
 float Hboltzmann (float *vel, float N, float T);
+
 float funcionH (float vel, float T);
+
+float correlacion(float *distcorr, float *pos, float n, float L, float rho, float Q);
 
 #endif

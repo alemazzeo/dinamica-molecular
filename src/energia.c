@@ -155,3 +155,49 @@ float funcionH (float vel, float T) {
     f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel)/ 2*T);
     return f * log(f) * 0.05;
 }
+
+
+float correlacion(float *distcorr, float *pos, float n, float L, float rho, float Q) {
+    int bin;
+    float rij, rij2, dR1;
+    float dr[3];
+
+    dR1 = L/(Q + 2); // longitud de un bin
+
+    for(int i = 0; i < Q; i++) {
+        distcorr[i] = 0;
+    }
+
+    for(int i=0; i<n-1; i++) {
+
+        for(int j=i+1; j<n; j++) {
+
+            rij2 = 0;
+
+            for(int k=0; k<3; k++) {
+                // calcula los dk con k = (x, y, z)
+                dr[k] = pos[i*3+k] - pos[j*3+k];
+
+                // condiciones de contorno para dk
+                if(dr[k] > 0.5*L){
+                    dr[k] -= L;
+                }
+                else if(dr[k] < -(0.5*L)){
+                    dr[k] += L;
+                }
+
+                // suma las diferencias cuadradas
+                rij2 += dr[k] * dr[k];
+            }
+
+            // calcula el módulo de la distancia
+            rij = sqrt(rij2);
+
+            bin = floor(rij/dR1);
+            distcorr[bin] += 1.0 / (4 * M_PI * rij * rij * dR1 * rho);
+
+        }
+    }
+
+    return 0;
+}
