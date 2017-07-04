@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # file: md_class.py
 
 import ctypes as C
@@ -29,16 +31,12 @@ CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
 # Return types
 CLIB.cinetica.restype = C.c_float
 CLIB.potencial.restype = C.c_float
-CLIB.potencial_exacto.restype = C.c_float
 CLIB.nueva_fza.restype = C.c_float
 
 
 class md():
-    '''
-    Wrapper con las funciones de libmd.so para dinámica molecular
-    '''
 
-    def __init__(self, N=512, rho=0.8442, h=0.001, T=10, lut_precision=1000):
+    def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000):
 
         # Almacena los parámetros recibidos
         self._N = N
@@ -144,7 +142,7 @@ class md():
         # Devuelve las velocidades como vector de c_floats
         return vel.astype(C.c_float)
 
-    def ver_pos(self, plot_vel=False, ax=None):
+    def ver_pos(self, plot_vel=False, ax=None, size=100):
         '''
         Grafica las posiciones y velocidades (opcional)
         '''
@@ -153,7 +151,7 @@ class md():
             fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
 
         x, y, z = self.transforma_xyz(self._pos)
-        scatter = ax.scatter(x, y, z, s=2, alpha=0.3)
+        scatter = ax.scatter(x, y, z, s=size, alpha=0.3)
 
         ax.set_xlim([0, self._L])
         ax.set_ylim([0, self._L])
@@ -271,6 +269,7 @@ class md():
             fig, ax = plt.subplots(2)
             ax[0].plot(energia)
             ax[1].plot(presion)
+            plt.show()
 
         return energia, presion
 
@@ -286,22 +285,23 @@ class md():
 
         var_piloto = np.var(x)
 
-        return int(m_piloto * var_piloto / (precision**2)), var_piloto
+        return int(m_piloto * var_piloto / (precision**2)), var_piloto**0.5
 
-    def muestreo(self, n, m=10, dc=100):
+    def muestreo(self, m=50, dc=100):
         '''
         Toma n muestras promediando 'm' grupos de 'dc' pasos
         '''
-        muestra_energia = np.zeros((n, m), dtype=float)
-        muestra_presion = np.zeros((n, m), dtype=float)
+        energia = np.zeros(m, dtype=float)
+        presion = np.zeros(m, dtype=float)
 
-        for i in range(n):
-            for j in range(m):
-                e, p = self.llenar_vectores(dc)
-                muestra_energia[i][j] = np.mean(e)
-                muestra_presion[i][j] = np.mean(p)
+        for i in range(m):
+            e, p = self.llenar_vectores(dc)
+            energia[i] = np.mean(e)
+            presion[i] = np.mean(p)
 
-        muestra_energia = np.average(muestra_energia, axis=1)
-        muestra_presion = np.average(muestra_presion, axis=1)
+        avg_energia = np.average(energia)
+        std_energia = np.std(energia)
+        avg_presion = np.average(presion)
+        std_presion = np.std(presion)
 
-        return muestra_energia, muestra_presion
+        return [avg_energia, std_energia], [avg_presion, std_presion]

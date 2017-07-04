@@ -86,7 +86,7 @@ float lookup(float *LUT, int g, float r){
 
     int indice = indice_lut(g, r); // Indice en la Lookup-table
 
-    // Version simple, agarra el valor de la izquierda
+    // Version simple: agarra el valor de la izquierda
     // return LUT[indice];
 
     // Version mas complicada: interpola linealmente entre ambos valores

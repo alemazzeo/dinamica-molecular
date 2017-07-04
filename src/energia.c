@@ -152,7 +152,7 @@ float Hboltzmann (float *vel, float N, float T){
 
 float funcionH (float vel, float T) {
     float f;
-    f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel)/ 2*T);
+    f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel) / (2*T));
     return f * log(f) * 0.05;
 }
 

@@ -222,6 +222,7 @@ for i in range(niter):
     # plt.draw()
     # plt.pause(0.0001)
 
+
 # Desviaciones de cada energia (Medido despues de termalizar)
 sigma_cinetica = np.std(cinetica[400:])
 sigma_potencial = np.std(potencial[400:])
