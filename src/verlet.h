@@ -23,7 +23,7 @@ int primer_paso(float *pos, float *vel, float *fza, int N, float h);
  *
  */
 
-int nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, int g);
+float nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, int g);
 /*
  * Función: nueva_fza
  * ------------------
@@ -36,6 +36,8 @@ int nueva_fza(float *pos, float *fza, int n, float L, float rc, float *FZA_LUT, 
  * rc: (float) Distancia de corte para el potencial
  * FZA_LUT: (float *) Lookup-table de la fuerza
  * g: (int) Precision de la Lookup-table
+ *
+ * return: (float) Presion de exceso
  */
 
 int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc);

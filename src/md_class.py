@@ -1,0 +1,307 @@
+# file: md_class.py
+
+import ctypes as C
+import numpy as np
+
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
+
+CLIB = C.CDLL('../bin/libmd.so')
+
+# Abreviaturas
+flp = C.POINTER(C.c_float)
+
+# Funciones de C
+CLIB.primer_paso.argtypes = [flp, flp, flp, C.c_int, C.c_float]
+CLIB.nueva_fza.argtypes = [flp, flp, C.c_int, C.c_float, C.c_float,
+                           flp, C.c_int]
+CLIB.nueva_fza_exacto.argtypes = [flp, flp, C.c_int, C.c_float, C.c_float]
+CLIB.ultimo_paso.argtypes = [flp, flp, C.c_int, C.c_float]
+CLIB.c_cont.argtypes = [flp, C.c_int, C.c_float]
+CLIB.lennardjones_lut.argtypes = [flp, C.c_int, C.c_float]
+CLIB.fuerza_lut.argtypes = [flp, flp, C.c_int, C.c_float]
+
+CLIB.cinetica.argtypes = [flp, C.c_int]
+CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
+CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
+
+# Return types
+CLIB.cinetica.restype = C.c_float
+CLIB.potencial.restype = C.c_float
+CLIB.potencial_exacto.restype = C.c_float
+CLIB.nueva_fza.restype = C.c_float
+
+
+class md():
+    '''
+    Wrapper con las funciones de libmd.so para dinámica molecular
+    '''
+
+    def __init__(self, N=512, rho=0.8442, h=0.001, T=10, lut_precision=1000):
+
+        # Almacena los parámetros recibidos
+        self._N = N
+        self._rho = rho
+        self._h = h
+        self._T = T
+        self._g = lut_precision
+
+        # Calcula otros parámetros internos
+        self._L = (N / rho)**(1.0 / 3.0)
+        self._rc = 0.5 * self._L
+        self._long_lut = int(lut_precision * self._rc)
+
+        # Prepara las posiciones y velocidades con sus punteros
+        self._pos = self.llenar_pos()
+        self._vel = self.llenar_vel()
+        self._p_pos = self._pos.ctypes.data_as(flp)
+        self._p_vel = self._vel.ctypes.data_as(flp)
+
+        # Prepara la memoria para almacenar la fuerza con su puntero
+        self._fza = np.zeros(3 * N)
+        self._p_fza = self._fza.ctypes.data_as(flp)
+
+        # Calcula la LUT para el potencial de Lennard-Jones
+        self._LJ_LUT = np.zeros(self._long_lut, dtype=C.c_float)
+        self._p_LJ_LUT = self._LJ_LUT.ctypes.data_as(flp)
+        CLIB.lennardjones_lut(self._p_LJ_LUT, self._long_lut, self._rc)
+
+        # Calcula la LUT para las fuerzas
+        self._FZA_LUT = np.zeros(self._long_lut, dtype=C.c_float)
+        self._p_FZA_LUT = self._FZA_LUT.ctypes.data_as(flp)
+        CLIB.fuerza_lut(self._p_FZA_LUT, self._p_LJ_LUT,
+                        self._long_lut, self._rc)
+
+        # Modo configurado para calculos
+        self._exacto = False
+
+        # Tiempo de termalizacion
+        self._t_termalizacion = 1000
+
+        # Presion de exceso
+        self._p_exceso = 0.0
+
+    @classmethod
+    def transforma_1D(cls, x, y, z):
+        '''
+        Recibe las coordenadas X, Y, Z y las convierte al 3N de C
+        '''
+        assert x.size == y.size == z.size
+        return np.array([x, y, z]).T.reshape(x.size * 3)
+
+    @classmethod
+    def transforma_xyz(cls, vector):
+        '''
+        Recibe el vector 3N mezclado de C y lo convierte en X, Y, Z
+        '''
+        assert vector.ndim == 1
+        N = vector.size
+        assert N % 3 == 0
+        aux = np.reshape(vector, (N // 3, 3)).T
+        return aux[0], aux[1], aux[2]
+
+    def llenar_pos(self):
+        '''
+        Setup para las posiciones y velocidades iniciales
+        '''
+        N = self._N
+        L = self._L
+
+        # Toma la parte entera de la raiz cubica de N
+        lado = int(N**(1.0 / 3.0))
+        # Calcula el numero de lugares generados
+        particulas = lado ** 3
+        # Si las particulas no entran en la caja de lado M aumenta su tamano
+        if particulas < N:
+            lado += 1
+
+        # Calcula la mitad de la separacion entre particulas
+        s = L / lado / 2
+
+        # Genera un vector para la grilla
+        aux = np.linspace(s, L - s, lado, dtype=float)
+        # Genera las posiciones con la grilla en 3D
+        x, y, z = np.meshgrid(aux, aux, aux, indexing='ij')
+        # Transforma las coordenadas xyz al vector 3N que usan las func. de C
+        pos = self.transforma_1D(x, y, z)
+
+        # Devuelve la cantidad de posiciones pedidas como vector de c_floats
+        return pos[0:3 * N].astype(C.c_float)
+
+    def llenar_vel(self):
+        '''
+        Setup para las velocidades
+        '''
+        N = self._N
+        T = self._T
+
+        # Genera una distribucion normal de velocidades
+        vel = np.random.normal(loc=0, scale=T**0.5, size=3 * N)
+        # Resta el promedio para evitar que Pt sea igual a cero
+        vel -= np.mean(vel)
+
+        # Devuelve las velocidades como vector de c_floats
+        return vel.astype(C.c_float)
+
+    def ver_pos(self, plot_vel=False, ax=None):
+        '''
+        Grafica las posiciones y velocidades (opcional)
+        '''
+        if ax is None:
+            plt.ion()
+            fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+
+        x, y, z = self.transforma_xyz(self._pos)
+        scatter = ax.scatter(x, y, z, s=2, alpha=0.3)
+
+        ax.set_xlim([0, self._L])
+        ax.set_ylim([0, self._L])
+        ax.set_zlim([0, self._L])
+
+        if plot_vel:
+            vx, vy, vz = self.transforma_xyz(self._vel)
+            quiver = ax.quiver(x, y, z, vx, vy, vz)
+        else:
+            quiver = None
+
+        return fig, ax, scatter, quiver
+
+    def paso(self):
+        """
+        Da un paso en la simulacion usando las LUT o exacto
+        """
+        # Llama a la función que da medio paso de velocidad y uno de posición
+        CLIB.primer_paso(self._p_pos, self._p_vel,
+                         self._p_fza, self._N, self._h)
+
+        # Calcula la nueva fuerza en el modo configurado
+        if self._exacto:
+            CLIB.nueva_fza_exacto(self._p_pos, self._p_fza,
+                                  self._N, self._L, self._rc)
+        else:
+            # Al calcular la nueva fuerza actualiza la presión de exceso
+            self._p_exceso = CLIB.nueva_fza(self._p_pos, self._p_fza, self._N,
+                                            self._L, self._rc, self._p_FZA_LUT,
+                                            self._g)
+
+        # Da el ultimo medio paso de velocidad
+        CLIB.ultimo_paso(self._p_vel, self._p_fza, self._N, self._h)
+
+        # Aplica condiciones de contorno
+        CLIB.c_cont(self._p_pos, self._N, self._L)
+
+    def n_pasos(self, n=5000):
+        '''
+        Realiza sucesivos pasos sin almacenar información
+        '''
+        for i in range(n):
+            self.paso()
+
+    def calc_energia_cinetica(self):
+        '''
+        Calcula la suma de la energia cinética.
+        '''
+        ecin = CLIB.cinetica(self._p_vel, self._N)
+        return ecin
+
+    def calc_energia_potencial(self):
+        '''
+        Calcula la suma de la energia potencial en el modo configurado.
+        '''
+        epot = CLIB.potencial(self._p_pos, self._N, self._L,
+                              self._p_LJ_LUT, self._g, self._rc)
+
+        if self._exacto:
+            epot = CLIB.potencial(self._pos, self._N, self._L, self._rc)
+
+        return epot
+
+    def calc_energia(self):
+        '''
+        Calcula la suma de la energia cinética y potencial.
+        '''
+        return self.calc_energia_cinetica() + self.calc_energia_potencial()
+
+    def calc_presion(self):
+        '''
+        Calcula el observable P / (rho*T) - 1
+        '''
+        return self._p_exceso / 3
+
+    def _rescaling(self, T):
+        '''
+        Realiza el rescaling de velocidades
+        '''
+        self._vel *= np.sqrt(T / self._T)
+
+    def nueva_T(self, T, dT=0.01):
+        '''
+        Realiza los rescaling y n_pasoses necesarios para llegar a T
+        '''
+
+        # Corrige el signo de dT si es necesario
+        if T < self.T:
+            dT = -abs(dT)
+        else:
+            dT = abs(dT)
+
+        while abs(T - self._T) > 0:
+
+            # Corrige dT si es mayor a la diferencia de temperaturas
+            if dT > T - self._T:
+                dT = T - self._T
+
+            self._rescaling(self._T + dT)
+            self.n_pasos()
+
+    def llenar_vectores(self, m, plot=False):
+        '''
+        Promedia m valores de energia y presion
+        '''
+        energia = np.zeros(m, dtype=float)
+        presion = np.zeros(m, dtype=float)
+
+        for i in range(m):
+            self.paso()
+            energia[i] = self.calc_energia()
+            presion[i] = self.calc_presion()
+
+        if plot:
+            fig, ax = plt.subplots(2)
+            ax[0].plot(energia)
+            ax[1].plot(presion)
+
+        return energia, presion
+
+    def prueba_piloto(self, precision, m_piloto=20, dc=100):
+        '''
+        Estima para la precision deseada la cantidad de promedios a considerar
+        '''
+        x = np.zeros(m_piloto, dtype=float)
+
+        for i in range(m_piloto):
+            energia, presion = self.llenar_vectores(dc)
+            x[i] = np.mean(energia)
+
+        var_piloto = np.var(x)
+
+        return int(m_piloto * var_piloto / (precision**2)), var_piloto
+
+    def muestreo(self, n, m=10, dc=100):
+        '''
+        Toma n muestras promediando 'm' grupos de 'dc' pasos
+        '''
+        muestra_energia = np.zeros((n, m), dtype=float)
+        muestra_presion = np.zeros((n, m), dtype=float)
+
+        for i in range(n):
+            for j in range(m):
+                e, p = self.llenar_vectores(dc)
+                muestra_energia[i][j] = np.mean(e)
+                muestra_presion[i][j] = np.mean(p)
+
+        muestra_energia = np.average(muestra_energia, axis=1)
+        muestra_presion = np.average(muestra_presion, axis=1)
+
+        return muestra_energia, muestra_presion

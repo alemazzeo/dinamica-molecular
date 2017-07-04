@@ -17,12 +17,13 @@ int primer_paso(float *pos, float *vel, float *fza, int N, float h){
     return 0;
 }
 
-int nueva_fza(float *pos, float *fza, int n, float L,
+float nueva_fza(float *pos, float *fza, int n, float L,
     float rc, float *FZA_LUT, int g) {
     // Calcula la nueva fuerza
 
     float rij, rij2, fuerza, radial;
     float dr[3];
+    float p_exceso = 0;
 
     //inicializa las fuerzas a cero
     for(int i=0; i<3*n; i++) {
@@ -58,6 +59,7 @@ int nueva_fza(float *pos, float *fza, int n, float L,
 
                 // calcula la parte radial de la fuerza mediante la LUT
                 radial = lookup(FZA_LUT, g, rij);
+		p_exceso += rij * radial;
 
                 for(int k=0; k<3; k++) {
 
@@ -71,7 +73,7 @@ int nueva_fza(float *pos, float *fza, int n, float L,
             }
         }
     }
-    return 0;
+    return p_exceso;
 }
 
 int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc) {
