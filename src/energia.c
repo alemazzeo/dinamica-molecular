@@ -149,21 +149,17 @@ float Hboltzmann (float *vel, float N, float T){
 
 float funcionH (float vel, float T) {
     float f;
-    f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel)/ 2*T);
+    f = (4*M_PI) * pow((2*M_PI*T),(-3.0/2)) * vel * vel * exp(-(vel * vel) / (2*T));
     return f * log(f) * 0.05;
 }
 
 
-float correlacion(float *distcorr, float *pos, float n, float L, float rho, float Q) {
+float distrib_radial(float *distrad, float *pos, float n, float L, float rho, float Q) {
     int bin;
     float rij, rij2, dR1;
     float dr[3];
 
     dR1 = L/(Q + 2); // longitud de un bin
-
-    for(int i = 0; i < Q; i++) {
-        distcorr[i] = 0;
-    }
 
     for(int i=0; i<n-1; i++) {
 
@@ -191,7 +187,7 @@ float correlacion(float *distcorr, float *pos, float n, float L, float rho, floa
             rij = sqrt(rij2);
 
             bin = floor(rij/dR1);
-            distcorr[bin] += 1.0 / (4 * M_PI * rij * rij * dR1 * rho);
+            distrad[bin] += 1.0 / (4 * M_PI * rij * rij * dR1 * rho);
 
         }
     }

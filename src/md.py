@@ -136,17 +136,17 @@ def ver_pos(pos, vel=None, L=None, ax=None):
 ##############################
 
 # Parametros externos
-N = 512
-rho = 0.8442
-h = 0.001
-T = 10 # 0.728
-g = 1000
-niter = 2000
+N = 512 # Nr de partiulas
+rho = 0.8442 # Densidad
+h = 0.001 # Paso temporal
+T = 0.728 # Temperatura
+g = 10000 # Precision de las Lookup-tables
+niter = 2000 # Nr de iteraciones que se van a realizar
 
 # Parametros internos
-L = (N / rho)**(1.0 / 3.0)
-rc = 0.5 * L
-long_lut = int(g*rc)
+L = (N / rho)**(1.0 / 3.0) # Longitud de la caja
+rc = 0.5 * L # Distancia de corte para el potencial y la fuerza
+long_lut = int(g*rc) # Longitud de las Lookup-tables
 
 # Configuracion inicial de posiciones y velocidades
 pos = llenar_pos(N, L)
@@ -180,19 +180,21 @@ p_vel = vel.ctypes.data_as(flp)
 ##############################
 
 
-# plt.ion()
-# fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-#
-# ax.set_xlim([0, L])
-# ax.set_ylim([0, L])
-# ax.set_zlim([0, L])
-#
-# x, y, z = transforma_xyz(pos)
-# scatter = ax.scatter(x, y, z)
-# vx, vy, vz = transforma_xyz(vel)
+plt.ion()
+fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+
+ax.set_xlim([0, L])
+ax.set_ylim([0, L])
+ax.set_zlim([0, L])
+
+x, y, z = transforma_xyz(pos)
+scatter = ax.scatter(x, y, z)
+vx, vy, vz = transforma_xyz(vel)
 # quiver = ax.quiver(x, y, z, vx, vy, vz)
 
 # Variable auxiliar para elegir si resolver de forma exacta o no.
+# 1: Calcula potencial y fuerza de forma exacta
+# 0: Calcula potencial y fuerza mediante Lookup-tables
 exacto = 0
 
 for i in range(niter):
@@ -209,31 +211,35 @@ for i in range(niter):
     cinetica[i] = CLIB.cinetica(p_vel, N)
     energia[i] = cinetica[i] + potencial[i]
 
-    # ax.cla()
-    # x, y, z = transforma_xyz(pos)
-    # scatter = ax.scatter(x, y, z)
-    # vx, vy, vz = transforma_xyz(vel)
+    ax.cla()
+    x, y, z = transforma_xyz(pos)
+    scatter = ax.scatter(x, y, z)
+    vx, vy, vz = transforma_xyz(vel)
     # quiver = ax.quiver(x, y, z, vx, vy, vz)
-    # ax.set_xlim([0, L])
-    # ax.set_ylim([0, L])
-    # ax.set_zlim([0, L])
-    # plt.draw()
-    # plt.pause(0.0001)
+    ax.set_xlim([0, L])
+    ax.set_ylim([0, L])
+    ax.set_zlim([0, L])
+    plt.draw()
+    plt.pause(0.0001)
 
+
+# Desviaciones de cada energia (Medido despues de termalizar)
 sigma_cinetica = np.std(cinetica[400:])
 sigma_potencial = np.std(potencial[400:])
 sigma_energia = np.std(energia[400:])
 
+# Valores medios (Medido despues de termalizar)
 avg_cinetica = np.mean(cinetica[400:])
 avg_potencial = np.mean(potencial[400:])
 avg_energia = np.mean(energia[400:])
 
-print(avg_potencial, sigma_potencial)
-print(avg_cinetica, sigma_cinetica)
-print(avg_energia, sigma_energia)
+print("Energia potencial = " + str(avg_potencial) + " +- " + str(sigma_potencial))
+print("Energia cinetica = " + str(avg_cinetica) + " +- " + str(sigma_cinetica))
+print("Energia total = " + str(avg_energia) + " +- " + str(sigma_energia))
 
-fig2, ax2 = plt.subplots(1)
-ax2.plot(energia, 'k.')
-ax2.plot(cinetica, 'r.')
-ax2.plot(potencial, 'b.')
-plt.show()
+# Grafica las tres energias en el mismo grafico
+# fig2, ax2 = plt.subplots(1)
+# ax2.plot(energia, 'k.')
+# ax2.plot(cinetica, 'r.')
+# ax2.plot(potencial, 'b.')
+# plt.show()
