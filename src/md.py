@@ -228,9 +228,9 @@ avg_cinetica = np.mean(cinetica[400:])
 avg_potencial = np.mean(potencial[400:])
 avg_energia = np.mean(energia[400:])
 
-print avg_potencial, sigma_potencial
-print avg_cinetica, sigma_cinetica
-print avg_energia, sigma_energia
+print(avg_potencial, sigma_potencial)
+print(avg_cinetica, sigma_cinetica)
+print(avg_energia, sigma_energia)
 
 fig2, ax2 = plt.subplots(1)
 ax2.plot(energia, 'k.')

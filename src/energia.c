@@ -132,10 +132,7 @@ float lambda_verlet (float *pos, float N, float L) {
         ly += cos (b*(pos[3*i+1]-(a/2)));
         lz += cos (b*(pos[3*i+2]-(a/2)));
     }
-    lx =  (lx/N);
-    ly =  (ly/N);
-    lz =  (lz/N);
-    l = (lx+ly+lz)/3; // lambda total
+    l = (lx+ly+lz)/(3*N); // lambda total
     return l;
 }
 
