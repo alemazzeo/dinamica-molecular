@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 
+import os
+
 CLIB = C.CDLL('../bin/libmd.so')
 
 # Abreviaturas
@@ -38,7 +40,11 @@ CLIB.nueva_fza.restype = C.c_float
 
 class md():
 
+<<<<<<< HEAD
     def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000, Q=400):
+=======
+    def __init__(self, N=512, rho=0.8442, h=0.001, T=2.0, lut_precision=10000):
+>>>>>>> 4d2fce855c4cf68cddf14ba601be7facdfcd53d5
 
         # Almacena los parámetros recibidos
         self._N = N
@@ -52,6 +58,10 @@ class md():
         self._L = (N / rho)**(1.0 / 3.0)
         self._rc = 0.5 * self._L
         self._long_lut = int(lut_precision * self._rc)
+
+        # Cantidad de pasos realizados
+
+        self._cant_pasos = 0
 
         # Prepara las posiciones y velocidades con sus punteros
         self._pos = self.llenar_pos()
@@ -86,6 +96,38 @@ class md():
 
         # Presion de exceso
         self._p_exceso = 0.0
+
+    @property
+    def N(self):
+        return self._N
+
+    @property
+    def rho(self):
+        return self._rho
+
+    @property
+    def h(self):
+        return self._h
+
+    @property
+    def T(self):
+        return self._T
+
+    @property
+    def lut_precision(self):
+        return self._g
+
+    @property
+    def rc(self):
+        return self._rc
+
+    @property
+    def L(self):
+        return self._L
+
+    @property
+    def cant_pasos(self):
+        return self._cant_pasos
 
     @classmethod
     def transforma_1D(cls, x, y, z):
@@ -149,7 +191,7 @@ class md():
         # Devuelve las velocidades como vector de c_floats
         return vel.astype(C.c_float)
 
-    def ver_pos(self, plot_vel=False, ax=None, size=100):
+    def ver_pos(self, plot_vel=False, ax=None, size=30):
         '''
         Grafica las posiciones y velocidades (opcional)
         '''
@@ -158,7 +200,7 @@ class md():
             fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
 
         x, y, z = self.transforma_xyz(self._pos)
-        scatter = ax.scatter(x, y, z, s=size, alpha=0.3)
+        scatter = ax.scatter(x, y, z, s=size, alpha=0.7)
 
         ax.set_xlim([0, self._L])
         ax.set_ylim([0, self._L])
@@ -195,6 +237,8 @@ class md():
 
         # Aplica condiciones de contorno
         CLIB.c_cont(self._p_pos, self._N, self._L)
+
+        self._cant_pasos += 1
 
     def n_pasos(self, n=5000):
         '''
@@ -234,7 +278,7 @@ class md():
         '''
         return self._p_exceso / 3
 
-    def _rescaling(self, T):
+    def rescaling(self, T):
         '''
         Realiza el rescaling de velocidades
         '''
@@ -257,7 +301,7 @@ class md():
             if dT > T - self._T:
                 dT = T - self._T
 
-            self._rescaling(self._T + dT)
+            self.rescaling(self._T + dT)
             self.n_pasos()
 
     def llenar_vectores(self, m, plot=False):
@@ -294,7 +338,7 @@ class md():
 
         return int(m_piloto * var_piloto / (precision**2)), var_piloto**0.5
 
-    def muestreo(self, m=50, dc=100):
+    def tomar_muestra(self, m=50, dc=100):
         '''
         Toma n muestras promediando 'm' grupos de 'dc' pasos
         '''
@@ -325,3 +369,46 @@ class md():
 
         self._distrad = [i/(n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
+
+    def save(self, nombre='temp.npy', ruta='../datos/'):
+        '''
+        Almacena el estado actual de la simulación
+        '''
+        os.makedirs(ruta, exist_ok=True)
+
+        params = [self.N,
+                  self.rho,
+                  self.h,
+                  self.T,
+                  self.lut_precision,
+                  self.cant_pasos]
+
+        particulas = [self._pos,
+                      self._vel]
+
+        np.save(ruta + nombre, [params, particulas])
+
+    @classmethod
+    def load(cls, nombre='temp.npy', ruta='../datos/'):
+        '''
+        Recupera el estado de una simulación almacenada
+        '''
+        params, particulas = np.load(ruta + nombre)
+
+        N, rho, h, T, lut_precision, cant_pasos = params
+
+        md_load = cls(N, rho, h, T, lut_precision)
+        md_load._cant_pasos = cant_pasos
+
+        md_load._pos = np.asarray(particulas[0], dtype=C.c_float)
+        md_load._vel = np.asarray(particulas[1], dtype=C.c_float)
+
+        md_load._p_pos = md_load._pos.ctypes.data_as(flp)
+        md_load._p_vel = md_load._vel.ctypes.data_as(flp)
+
+        md_load._p_exceso = CLIB.nueva_fza(md_load._p_pos, md_load._p_fza,
+                                           md_load._N, md_load._L,
+                                           md_load._rc, md_load._p_FZA_LUT,
+                                           md_load._g)
+
+        return md_load
