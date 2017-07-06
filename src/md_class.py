@@ -40,11 +40,7 @@ CLIB.nueva_fza.restype = C.c_float
 
 class md():
 
-<<<<<<< HEAD
     def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000, Q=400):
-=======
-    def __init__(self, N=512, rho=0.8442, h=0.001, T=2.0, lut_precision=10000):
->>>>>>> 4d2fce855c4cf68cddf14ba601be7facdfcd53d5
 
         # Almacena los parámetros recibidos
         self._N = N
@@ -56,7 +52,7 @@ class md():
 
         # Calcula otros parámetros internos
         self._L = (N / rho)**(1.0 / 3.0)
-        self._rc = 0.5 * self._L
+        self._rc = 2.5 # 0.5 * self._L
         self._long_lut = int(lut_precision * self._rc)
 
         # Cantidad de pasos realizados
