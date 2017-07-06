@@ -30,6 +30,8 @@ CLIB.cinetica.argtypes = [flp, C.c_int]
 CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
 CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
 
+CLIB.distrib_radial.argtypes = [flp, flp, C.c_float, C.c_float, C.c_float, C.c_float]
+
 # Return types
 CLIB.cinetica.restype = C.c_float
 CLIB.potencial.restype = C.c_float
@@ -38,7 +40,11 @@ CLIB.nueva_fza.restype = C.c_float
 
 class md():
 
+<<<<<<< HEAD
+    def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000, Q=400):
+=======
     def __init__(self, N=512, rho=0.8442, h=0.001, T=2.0, lut_precision=10000):
+>>>>>>> 4d2fce855c4cf68cddf14ba601be7facdfcd53d5
 
         # Almacena los parámetros recibidos
         self._N = N
@@ -46,6 +52,7 @@ class md():
         self._h = h
         self._T = T
         self._g = lut_precision
+        self._Q = Q
 
         # Calcula otros parámetros internos
         self._L = (N / rho)**(1.0 / 3.0)
@@ -63,8 +70,12 @@ class md():
         self._p_vel = self._vel.ctypes.data_as(flp)
 
         # Prepara la memoria para almacenar la fuerza con su puntero
-        self._fza = np.zeros(3 * N)
+        self._fza = np.zeros(3 * N, dtype=C.c_float)
         self._p_fza = self._fza.ctypes.data_as(flp)
+
+        # Prepara la memoria para almacenar la funcion de distribucion radial y su puntero
+        self._distrad = np.zeros(self._Q, dtype=C.c_float)
+        self._p_distrad = self._distrad.ctypes.data_as(flp)
 
         # Calcula la LUT para el potencial de Lennard-Jones
         self._LJ_LUT = np.zeros(self._long_lut, dtype=C.c_float)
@@ -345,6 +356,19 @@ class md():
         std_presion = np.std(presion)
 
         return [avg_energia, std_energia], [avg_presion, std_presion]
+
+    def dist_radial(self, n=100, m=100):
+        '''
+        Calcula la  funcion de distribucion radial promediando los resultados n pasos totales,
+        donde entre cada paso se realizan m pasos de Verlet
+        '''
+
+        for i in range(n):
+            CLIB.distrib_radial(self._p_distrad, self._p_pos, self._N, self._L, self._rho, self._Q)
+            self.n_pasos(m)
+
+        self._distrad = [i/(n * 0.5 * self._N) for i in self._distrad]
+        return self._distrad
 
     def save(self, nombre='temp.npy', ruta='../datos/'):
         '''
