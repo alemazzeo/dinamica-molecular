@@ -65,6 +65,7 @@ float nueva_fza(float *pos, float *fza, int n, float L,
 
                     // calcula la componente k
                     fuerza = radial * dr[k] / rij;
+                    // fuerza = 0; //ignorar
                     // le suma la fza a la particula i con componente k
                     fza[i * 3 + k] += fuerza;
                     // idem por simetria
@@ -101,7 +102,7 @@ int nueva_fza_exacto(float *pos, float *fza, int n, float L, float rc) {
                 if(dr[k] > L/2){
                     dr[k] -= L;
                 }
-                if(dr[k] < -L/2){
+                else if(dr[k] < -L/2){
                     dr[k] += L;
                 }
 

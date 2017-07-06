@@ -69,6 +69,6 @@ float Hboltzmann (float *vel, float N, float T);
 
 float funcionH (float vel, float T);
 
-float correlacion(float *distcorr, float *pos, float n, float L, float rho, float Q);
+float distrib_radial(float *distrad, float *pos, float n, float L, float rho, float Q);
 
 #endif

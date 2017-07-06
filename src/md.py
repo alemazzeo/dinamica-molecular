@@ -182,16 +182,16 @@ p_vel = vel.ctypes.data_as(flp)
 ##############################
 
 
-# plt.ion()
-# fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-#
-# ax.set_xlim([0, L])
-# ax.set_ylim([0, L])
-# ax.set_zlim([0, L])
-#
-# x, y, z = transforma_xyz(pos)
-# scatter = ax.scatter(x, y, z)
-# vx, vy, vz = transforma_xyz(vel)
+plt.ion()
+fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+
+ax.set_xlim([0, L])
+ax.set_ylim([0, L])
+ax.set_zlim([0, L])
+
+x, y, z = transforma_xyz(pos)
+scatter = ax.scatter(x, y, z)
+vx, vy, vz = transforma_xyz(vel)
 # quiver = ax.quiver(x, y, z, vx, vy, vz)
 
 # Variable auxiliar para elegir si resolver de forma exacta o no.
@@ -213,16 +213,16 @@ for i in range(niter):
     cinetica[i] = CLIB.cinetica(p_vel, N)
     energia[i] = cinetica[i] + potencial[i]
 
-    # ax.cla()
-    # x, y, z = transforma_xyz(pos)
-    # scatter = ax.scatter(x, y, z)
-    # vx, vy, vz = transforma_xyz(vel)
+    ax.cla()
+    x, y, z = transforma_xyz(pos)
+    scatter = ax.scatter(x, y, z)
+    vx, vy, vz = transforma_xyz(vel)
     # quiver = ax.quiver(x, y, z, vx, vy, vz)
-    # ax.set_xlim([0, L])
-    # ax.set_ylim([0, L])
-    # ax.set_zlim([0, L])
-    # plt.draw()
-    # plt.pause(0.0001)
+    ax.set_xlim([0, L])
+    ax.set_ylim([0, L])
+    ax.set_zlim([0, L])
+    plt.draw()
+    plt.pause(0.0001)
 
 
 # Desviaciones de cada energia (Medido despues de termalizar)
@@ -235,11 +235,12 @@ avg_cinetica = np.mean(cinetica[400:])
 avg_potencial = np.mean(potencial[400:])
 avg_energia = np.mean(energia[400:])
 
-print "Energia potencial = " + str(avg_potencial) + " +- " + str(sigma_potencial)
-print "Energia cinetica = " + str(avg_cinetica) + " +- " + str(sigma_cinetica)
-print "Energia total = " + str(avg_energia) + " +- " + str(sigma_energia)
+print("Energia potencial = " + str(avg_potencial) + " +- " + str(sigma_potencial))
+print("Energia cinetica = " + str(avg_cinetica) + " +- " + str(sigma_cinetica))
+print("Energia total = " + str(avg_energia) + " +- " + str(sigma_energia))
 
 # Grafica las tres energias en el mismo grafico
+<<<<<<< HEAD
 plt.ion()
 fig2, ax2 = plt.subplots(1)
 ax2.plot(energia, 'k.')
@@ -261,3 +262,10 @@ ax3[1].set_ylabel(r'Energia potencial')
 ax3[0].set_title('Energia cinetica')
 ax3[1].set_title('Energia potencial')
 plt.show()
+=======
+# fig2, ax2 = plt.subplots(1)
+# ax2.plot(energia, 'k.')
+# ax2.plot(cinetica, 'r.')
+# ax2.plot(potencial, 'b.')
+# plt.show()
+>>>>>>> f5638d5aa45a1a2731fcae88bbff2f705840e64e

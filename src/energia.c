@@ -132,10 +132,7 @@ float lambda_verlet (float *pos, float N, float L) {
         ly += cos (b*(pos[3*i+1]-(a/2)));
         lz += cos (b*(pos[3*i+2]-(a/2)));
     }
-    lx =  (lx/N);
-    ly =  (ly/N);
-    lz =  (lz/N);
-    l = (lx+ly+lz)/3; // lambda total
+    l = (lx+ly+lz)/(3*N); // lambda total
     return l;
 }
 
@@ -157,16 +154,12 @@ float funcionH (float vel, float T) {
 }
 
 
-float correlacion(float *distcorr, float *pos, float n, float L, float rho, float Q) {
+float distrib_radial(float *distrad, float *pos, float n, float L, float rho, float Q) {
     int bin;
     float rij, rij2, dR1;
     float dr[3];
 
     dR1 = L/(Q + 2); // longitud de un bin
-
-    for(int i = 0; i < Q; i++) {
-        distcorr[i] = 0;
-    }
 
     for(int i=0; i<n-1; i++) {
 
@@ -194,7 +187,7 @@ float correlacion(float *distcorr, float *pos, float n, float L, float rho, floa
             rij = sqrt(rij2);
 
             bin = floor(rij/dR1);
-            distcorr[bin] += 1.0 / (4 * M_PI * rij * rij * dR1 * rho);
+            distrad[bin] += 1.0 / (4 * M_PI * rij * rij * dR1 * rho);
 
         }
     }
