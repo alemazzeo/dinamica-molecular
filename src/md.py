@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # file: md.py
 
 import ctypes as C
@@ -141,11 +143,11 @@ rho = 0.8442 # Densidad
 h = 0.001 # Paso temporal
 T = 0.728 # Temperatura
 g = 10000 # Precision de las Lookup-tables
-niter = 2000 # Nr de iteraciones que se van a realizar
+niter = 1000 # Nr de iteraciones que se van a realizar
 
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0) # Longitud de la caja
-rc = 0.5 * L # Distancia de corte para el potencial y la fuerza
+rc = 2.5 # Distancia de corte para el potencial y la fuerza
 long_lut = int(g*rc) # Longitud de las Lookup-tables
 
 # Configuracion inicial de posiciones y velocidades
@@ -198,7 +200,7 @@ p_vel = vel.ctypes.data_as(flp)
 exacto = 0
 
 for i in range(niter):
-    if(exacto):
+    if exacto:
         # Exacto
         paso_exacto(pos, vel, fza, N, L, h, rc)
         potencial[i] = CLIB.potencial_exacto(p_pos, N, L, rc)
@@ -238,8 +240,24 @@ print "Energia cinetica = " + str(avg_cinetica) + " +- " + str(sigma_cinetica)
 print "Energia total = " + str(avg_energia) + " +- " + str(sigma_energia)
 
 # Grafica las tres energias en el mismo grafico
+plt.ion()
 fig2, ax2 = plt.subplots(1)
 ax2.plot(energia, 'k.')
 ax2.plot(cinetica, 'r.')
 ax2.plot(potencial, 'b.')
+plt.xlabel(r'Tiempo')
+plt.ylabel('Energia')
+plt.show()
+
+# Grafica la cinetica y la potencial en un corto rango
+# Para mostrar que se complementan
+plt.ion()
+fig3, ax3 = plt.subplots(2, sharex=True)
+ax3[0].plot(cinetica[400:900], 'r.', label='Energia cinetica')
+ax3[1].plot(potencial[400:900], 'b.', label='Energia potencial')
+plt.xlabel(r'Tiempo')
+ax3[0].set_ylabel(r'Energia cinetica')
+ax3[1].set_ylabel(r'Energia potencial')
+ax3[0].set_title('Energia cinetica')
+ax3[1].set_title('Energia potencial')
 plt.show()

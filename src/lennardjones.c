@@ -87,15 +87,15 @@ float lookup(float *LUT, int g, float r){
     int indice = indice_lut(g, r); // Indice en la Lookup-table
 
     // Version simple: agarra el valor de la izquierda
-    // return LUT[indice];
+    return LUT[indice];
 
     // Version mas complicada: interpola linealmente entre ambos valores
-    float x1 = floor(r*g)/(float)g;
-    float x2 = x1 + (float)1/g;
-    float y1 = LUT[indice];
-    float y2 = LUT[indice + 1];
-    float m = (y2-y1) / (x2-x1);
-    float b = (y1*x2 - x1*y2) / (x2 - x1);
-
-    return m * r + b;
+    // float x1 = floor(r*g)/(float)g;
+    // float x2 = x1 + (float)1/g;
+    // float y1 = LUT[indice];
+    // float y2 = LUT[indice + 1];
+    // float m = (y2-y1) / (x2-x1);
+    // float b = (y1*x2 - x1*y2) / (x2 - x1);
+    //
+    // return m * r + b;
 }
