@@ -31,7 +31,6 @@ CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
 CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
 
 CLIB.distrib_radial.argtypes = [flp, flp, C.c_float, C.c_float, C.c_float, C.c_float]
-CLIB.build_rij.argtypes = [flp, flp, C.c_float]
 
 # Return types
 CLIB.cinetica.restype = C.c_float
@@ -73,10 +72,6 @@ class md():
         # Prepara la memoria para almacenar la funcion de distribucion radial y su puntero
         self._distrad = np.zeros(self._Q, dtype=C.c_float)
         self._p_distrad = self._distrad.ctypes.data_as(flp)
-
-        # Prepara la memoria para almacenar el vector de distancias rij y su puntero
-        self._arr_rij = np.zeros(int(0.5 * N * (N - 1)) , dtype=C.c_float)
-        self._p_arr_rij = self._arr_rij.ctypes.data_as(flp)
 
         # Calcula la LUT para el potencial de Lennard-Jones
         self._LJ_LUT = np.zeros(self._long_lut, dtype=C.c_float)
@@ -371,32 +366,26 @@ class md():
         self._distrad = [i/(n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
-    def lindemann(self, n=100):
+    def lindemann(self, m=100):
         '''
-        Calcula el coeficiente de Lindemann, promediando las posiciones de n pasos.
+        Calcula el coeficiente de Lindemann, calculando las dispersiones de las posiciones de m pasos temporales.
         '''
 
-        cte = 2 / (self._N * (self._N - 1))
+        N = self._N
 
-        # creo el vector donde guardo los promedios de los rij
-        avg = np.zeros(int(0.5 * self._N * (self._N - 1)), dtype=C.c_float)
-        avg2 = np.zeros(int(0.5 * self._N * (self._N - 1)), dtype=C.c_float)
-        sum_arg = np.zeros(int(0.5 * self._N * (self._N - 1)), dtype=C.c_float)
+        avg = np.zeros(N, dtype=C.c_float)
+        avg2 = np.zeros(N, dtype=C.c_float)
+        arg_suma = np.zeros(N, dtype=C.c_float)
 
-        # armo los promedios de los rij
-        for i in range(n):
-            CLIB.build_rij(self._p_arr_rij, self._p_pos, self._N)
-            avg = [i + j for i in avg for j in self._arr_rij]
-            avg2 = [i + j*j for i in avg2 for j in self._arr_rij]
-            self.paso() #podria ser n pasos?
+        for i in range(m):
+            for j in range(N):
+                rj = self._pos[3*j] * self._pos[3*j] + self._pos[3*j + 1] * self._pos[3*j + 1] + self._pos[3*j + 2] * self._pos[3*j + 2]
+                avg += rj / m
+                avg2 += (rj * rj) / m
 
-        avg = [i/n for i in avg]
-        avg2 = [i/n for i in avg2]
+        arg_suma = [i - j*j for i in avg2 for j in avg]
 
-        # argumento de la suma
-        sum_arg = [np.sqrt((i - j*j) / (j*j)) for i in avg2 for j in avg]
-
-        lind = cte * np.sum( sum_arg )
+        lind = (1 / N) * np.sqrt( np.sum(arg_suma) )
 
 
     def save(self, nombre='temp.npy', ruta='../datos/'):

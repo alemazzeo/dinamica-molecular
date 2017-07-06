@@ -194,17 +194,3 @@ float distrib_radial(float *distrad, float *pos, float n, float L, float rho, fl
 
     return 0;
 }
-
-float build_rij(float *arr_rij, float *pos, float N) {
-    float rij;
-    int u = 0;
-
-    for(int i=0; i<N-1; i++) {
-        for(int j=i+1; j<N; j++) {
-            rij = distancia2(&pos[3*i], &pos[3*j]);
-            arr_rij[u] = sqrt(rij);
-            u += 1;
-        }
-    }
-    return 0;
-}

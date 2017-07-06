@@ -71,6 +71,4 @@ float funcionH (float vel, float T);
 
 float distrib_radial(float *distrad, float *pos, float n, float L, float rho, float Q);
 
-float build_rij(float *arr_rij, float *pos, float N);
-
 #endif
