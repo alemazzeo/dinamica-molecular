@@ -4,7 +4,6 @@
 
 from md_class import md
 import time
-import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -19,7 +18,7 @@ parser.add_argument('-T_stop', type=float, default=0.2)
 parser.add_argument('-T_step', type=float, default=0.02)
 parser.add_argument('-rho_start', type=float, default=0.1)
 parser.add_argument('-rho_stop', type=float, default=0.9)
-parser.add_argument('-rho_step', type=float, default=0.05)
+parser.add_argument('-rho_step', type=float, default=0.02)
 parser.add_argument('-preterm', type=int, default=500)
 parser.add_argument('-term', type=int, default=50)
 parser.add_argument('-m', type=int, default=100)
