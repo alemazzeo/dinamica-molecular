@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     float T = 0.5; // Temperatura
     int g = 1000; // Precision de LUT (1/g)
     int i; // Indices para loopear
-    int Q = 400; //tamaño del array distcorr
+    // int Q = 400; // presicion para la funcion g(r)
 
     // NO CAMBIAR ESTO:
     int long_lut = floor(g*rc); // Tamano de la Lookup-table
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     float *vel = (float *)malloc(3*N*sizeof(float));
     float *fza = (float *)malloc(3*N*sizeof(float));
     float *lambda = (float *)malloc(niter*sizeof(float));
-    float *distcorr = (float *)malloc(Q*sizeof(float));
+    // float *distrad = (float *)malloc(Q*sizeof(float));
 
     srand(time(NULL));
 
@@ -42,17 +42,15 @@ int main(int argc, char **argv) {
     llenar(pos, N, L);
     velocidades(vel, N, T);
 
+
     for(i=0;i<niter;i++){
         primer_paso(pos, vel, fza, N, h);
         // nueva_fza(pos, fza, N, L, rc, FZA_LUT, g);
         nueva_fza_exacto(pos, fza, N, L, rc);
         ultimo_paso(vel, fza, N, h);
         c_cont(pos, N, L);
-        // lambda[i] = lambda_verlet (pos, N, L);
-        // printf("%f, ", lambda_verlet (pos, N, L));
-        printf("%f, ", Hboltzmann (vel, N, T));
     }
-    correlacion(distcorr, pos, N, L, rho, Q);
+
 
     free(LJ_LUT);
     free(FZA_LUT);
