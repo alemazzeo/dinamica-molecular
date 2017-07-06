@@ -370,7 +370,7 @@ class md():
         self._distrad = [i / (n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
-    def lindemann(self, m=100, paso_intermedio=1, plot=False):
+    def lindemann(self, m=100, paso_intermedio=1, promedio=100, plot=False):
         '''
         Calcula el coeficiente de Lindemann, calculando las dispersiones de
         las posiciones para m pasos temporales.
@@ -378,42 +378,45 @@ class md():
 
         N = self._N
 
-        acum_rj = np.zeros(N)
-        acum_rj2 = np.zeros(N)
-        lind_array = np.zeros(m)
+        lind_matriz = np.zeros((promedio, m))
 
-        for j in range(m):
-            # Da los pasos intermedios
-            self.n_pasos(paso_intermedio)
+        for i in range(promedio):
+            acum_rj = np.zeros(N)
+            acum_rj2 = np.zeros(N)
 
-            # Cambia el origen de coordenadas de las posiciones al centro
-            pos_aux = self._pos - self._L / 2
-            # Calcula los cuadrados de las coordenadas
-            pos_aux = self._pos ** 2
-            # Cambia la forma del array a N vectores X², Y², Z²
-            pos_aux = pos_aux.reshape(self._N, 3)
+            for j in range(m):
+                # Da los pasos intermedios
+                self.n_pasos(paso_intermedio)
 
-            # Suma las coordenadas cuadradas para obtener distancias
-            rj2 = pos_aux.sum(axis=1)
+                # Cambia el origen de coordenadas de las posiciones al centro
+                pos_aux = self._pos - self._L / 2
+                # Calcula los cuadrados de las coordenadas
+                pos_aux = pos_aux ** 2
+                # Cambia la forma del array a N vectores X², Y², Z²
+                pos_aux = pos_aux.reshape(self._N, 3)
+                # Suma las coordenadas cuadradas para obtener dist. cuadradas
+                rj2 = pos_aux.sum(axis=1)
 
-            # Calcula las posiciones
-            rj = rj2**0.5
+                # Calcula las distancias tomando raiz
+                rj = rj2**0.5
 
-            # Acumula r y r2 para promediar
-            acum_rj += rj
-            acum_rj2 += rj2
+                # Acumula r y r2 para promediar
+                acum_rj += rj
+                acum_rj2 += rj2
 
-            # Calcula los promedios para el paso actual
-            avg_rj = acum_rj / (j + 1)
-            avg_rj2 = acum_rj2 / (j + 1)
+                # Calcula los promedios para el paso actual
+                avg_rj = acum_rj / (j + 1)
+                avg_rj2 = acum_rj2 / (j + 1)
 
-            # Calcula la varianza (<x**2> - <x>**2)
-            var_rj = avg_rj2 - avg_rj**2
+                # Calcula la varianza (<x**2> - <x>**2)
+                var_rj = abs(avg_rj2 - avg_rj**2)
 
-            # Calcula el coeficiente de Lindemann
-            lind = np.sqrt(np.sum(var_rj / N))
+                # Calcula el coeficiente de Lindemann
+                lind = np.sqrt(np.sum(var_rj) / N)
 
-            lind_array[j] = lind
+                lind_matriz[i][j] = lind
+
+        lind_array = np.average(lind_matriz, axis=0)
 
         if plot:
             fig, ax = plt.subplots(1)
