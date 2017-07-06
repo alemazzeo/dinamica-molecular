@@ -52,7 +52,7 @@ class md():
 
         # Calcula otros parámetros internos
         self._L = (N / rho)**(1.0 / 3.0)
-        self._rc = 2.5 # 0.5 * self._L
+        self._rc = 2.5  # 0.5 * self._L
         self._long_lut = int(lut_precision * self._rc)
 
         # Cantidad de pasos realizados
@@ -279,6 +279,7 @@ class md():
         Realiza el rescaling de velocidades
         '''
         self._vel *= np.sqrt(T / self._T)
+        self._T = T
 
     def nueva_T(self, T, dT=0.01):
         '''
@@ -355,15 +356,16 @@ class md():
 
     def dist_radial(self, n=100, m=100):
         '''
-        Calcula la  funcion de distribucion radial promediando los resultados n pasos totales,
-        donde entre cada paso se realizan m pasos de Verlet
+        Calcula la  funcion de distribucion radial promediando los resultados
+        n pasos totales, donde entre cada paso se realizan m pasos de Verlet
         '''
 
         for i in range(n):
-            CLIB.distrib_radial(self._p_distrad, self._p_pos, self._N, self._L, self._rho, self._Q)
+            CLIB.distrib_radial(self._p_distrad, self._p_pos, self._N, self._L,
+                                self._rho, self._Q)
             self.n_pasos(m)
 
-        self._distrad = [i/(n * 0.5 * self._N) for i in self._distrad]
+        self._distrad = [i / (n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
     def lindemann(self, m=100):
@@ -384,9 +386,9 @@ class md():
                 avg2 += (rj * rj) / m
 
         arg_suma = [i - j*j for i in avg2 for j in avg]
-
         lind = (1 / N) * np.sqrt( np.sum(arg_suma) )
 
+        return lind
 
     def save(self, nombre='temp.npy', ruta='../datos/'):
         '''
