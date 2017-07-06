@@ -41,7 +41,8 @@ CLIB.nueva_fza.restype = C.c_float
 
 class md():
 
-    def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000, Q=400):
+    def __init__(self, N=512, rho=0.8442, h=0.001, T=2, lut_precision=10000,
+                 Q=400):
 
         # Almacena los parámetros recibidos
         self._N = N
@@ -385,13 +386,14 @@ class md():
             # Da los pasos intermedios
             self.n_pasos(paso_intermedio)
 
-            # Vector auxiliar de los valores de pos al cuadrado
+            # Cambia el origen de coordenadas de las posiciones al centro
+            pos_aux = self._pos - self._L / 2
+            # Calcula los cuadrados de las coordenadas
             pos_aux = self._pos ** 2
+            # Cambia la forma del array a N vectores X², Y², Z²
             pos_aux = pos_aux.reshape(self._N, 3)
 
-            # Obtiene las posiciones al cuadrado
-            # (cambia la forma del vector a una matriz de 3xN
-            #  y suma sobre el eje de dimensión 3)
+            # Suma las coordenadas cuadradas para obtener distancias
             rj2 = pos_aux.sum(axis=1)
 
             # Calcula las posiciones
