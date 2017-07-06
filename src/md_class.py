@@ -30,7 +30,8 @@ CLIB.cinetica.argtypes = [flp, C.c_int]
 CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
 CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
 
-CLIB.distrib_radial.argtypes = [flp, flp, C.c_float, C.c_float, C.c_float, C.c_float]
+CLIB.distrib_radial.argtypes = [
+    flp, flp, C.c_float, C.c_float, C.c_float, C.c_float]
 
 # Return types
 CLIB.cinetica.restype = C.c_float
@@ -69,7 +70,7 @@ class md():
         self._fza = np.zeros(3 * N, dtype=C.c_float)
         self._p_fza = self._fza.ctypes.data_as(flp)
 
-        # Prepara la memoria para almacenar la funcion de distribucion radial y su puntero
+        # Prepara la memoria para almacenar dist. radial y su puntero
         self._distrad = np.zeros(self._Q, dtype=C.c_float)
         self._p_distrad = self._distrad.ctypes.data_as(flp)
 
@@ -281,7 +282,7 @@ class md():
         self._vel *= np.sqrt(T / self._T)
         self._T = T
 
-    def nueva_T(self, T, dT=0.01):
+    def nueva_T(self, T, dT=0.01, term=100):
         '''
         Realiza los rescaling y n_pasoses necesarios para llegar a T
         '''
@@ -368,27 +369,60 @@ class md():
         self._distrad = [i / (n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
-    def lindemann(self, m=100):
+    def lindemann(self, m=100, paso_intermedio=1, plot=False):
         '''
-        Calcula el coeficiente de Lindemann, calculando las dispersiones de las posiciones de m pasos temporales.
+        Calcula el coeficiente de Lindemann, calculando las dispersiones de
+        las posiciones para m pasos temporales.
         '''
 
         N = self._N
 
-        avg = np.zeros(N, dtype=C.c_float)
-        avg2 = np.zeros(N, dtype=C.c_float)
-        arg_suma = np.zeros(N, dtype=C.c_float)
+        acum_rj = np.zeros(N)
+        acum_rj2 = np.zeros(N)
+        lind_array = np.zeros(m)
 
-        for i in range(m):
-            for j in range(N):
-                rj = self._pos[3*j] * self._pos[3*j] + self._pos[3*j + 1] * self._pos[3*j + 1] + self._pos[3*j + 2] * self._pos[3*j + 2]
-                avg += rj / m
-                avg2 += (rj * rj) / m
+        for j in range(m):
+            # Da los pasos intermedios
+            self.n_pasos(paso_intermedio)
 
-        arg_suma = [i - j*j for i in avg2 for j in avg]
-        lind = (1 / N) * np.sqrt( np.sum(arg_suma) )
+            # Vector auxiliar de los valores de pos al cuadrado
+            pos_aux = self._pos ** 2
+            pos_aux = pos_aux.reshape(self._N, 3)
 
-        return lind
+            # Obtiene las posiciones al cuadrado
+            # (cambia la forma del vector a una matriz de 3xN
+            #  y suma sobre el eje de dimensión 3)
+            rj2 = pos_aux.sum(axis=1)
+
+            # Calcula las posiciones
+            rj = rj2**0.5
+
+            # Acumula r y r2 para promediar
+            acum_rj += rj
+            acum_rj2 += rj2
+
+            # Calcula los promedios para el paso actual
+            avg_rj = acum_rj / (j + 1)
+            avg_rj2 = acum_rj2 / (j + 1)
+
+            # Calcula la varianza (<x**2> - <x>**2)
+            var_rj = avg_rj2 - avg_rj**2
+
+            # Calcula el coeficiente de Lindemann
+            lind = np.sqrt(np.sum(var_rj / N))
+
+            lind_array[j] = lind
+
+        if plot:
+            fig, ax = plt.subplots(1)
+            x = np.arange(1, (m * paso_intermedio) + 1, paso_intermedio)
+            ax.plot(x, lind_array, label='Coeficiente de Lindemann')
+            ax.set_xlabel('Pasos')
+            ax.set_ylabel('Coef. Lindemann')
+            ax.legend(loc='best')
+            plt.show()
+
+        return lind, lind_array
 
     def save(self, nombre='temp.npy', ruta='../datos/'):
         '''
@@ -432,3 +466,22 @@ class md():
                                            md_load._g)
 
         return md_load
+
+    def _mascara(self, d=0.2):
+        '''
+        Devuelve una máscara de las particulas contenidas en la caja
+        de tamaño L * (1-d) centrada en la caja original
+        '''
+        x, y, z = self.transforma_xyz(self._pos)
+        N = self.N
+        L = self.L
+
+        mask_x = (x > d * L) * (x < (1 - d) * L)
+        mask_y = (y > d * L) * (y < (1 - d) * L)
+        mask_z = (z > d * L) * (z < (1 - d) * L)
+        mask = mask_x * mask_y * mask_z
+        mask3N = np.zeros((N, 3), dtype=bool)
+        mask3N[mask] = 1
+        mask3N = mask3N.reshape(3 * N)
+
+        return mask3N
