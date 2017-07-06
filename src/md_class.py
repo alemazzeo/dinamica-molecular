@@ -53,7 +53,7 @@ class md():
 
         # Calcula otros parámetros internos
         self._L = (N / rho)**(1.0 / 3.0)
-        self._rc = 0.5 * self._L
+        self._rc = 2.5 # 0.5 * self._L
         self._long_lut = int(lut_precision * self._rc)
 
         # Cantidad de pasos realizados
