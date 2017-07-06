@@ -128,9 +128,9 @@ float lambda_verlet (float *pos, float N, float L) {
     lz = 0;
         //calculo lambda x : lx, lamba y :ly y lambda z : lz.
     for (i=0; i<=N-2;i++) {
-        lx += cos (b*(pos[3*i]-(a/2)));
-        ly += cos (b*(pos[3*i+1]-(a/2)));
-        lz += cos (b*(pos[3*i+2]-(a/2)));
+        lx += cos (b*(pos[3*i]-a));
+        ly += cos (b*(pos[3*i+1]-a));
+        lz += cos (b*(pos[3*i+2]-a));
     }
     l = (lx+ly+lz)/(3*N); // lambda total
     return l;
@@ -192,5 +192,19 @@ float distrib_radial(float *distrad, float *pos, float n, float L, float rho, fl
         }
     }
 
+    return 0;
+}
+
+float build_rij(float *arr_rij, float *pos, float N) {
+    float rij;
+    int u = 0;
+
+    for(int i=0; i<N-1; i++) {
+        for(int j=i+1; j<N; j++) {
+            rij = distancia2(&pos[3*i], &pos[3*j]);
+            arr_rij[u] = sqrt(rij);
+            u += 1;
+        }
+    }
     return 0;
 }
