@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
         // printf("%f, ", lambda_verlet (pos, N, L));
         printf("%f, ", Hboltzmann (vel, N, T));
     }
-    correlacion(distcorr, pos, N, L, rho, Q);
+    //correlacion(distcorr, pos, N, L, rho, Q);
 
     free(LJ_LUT);
     free(FZA_LUT);
