@@ -145,6 +145,8 @@ T = 0.728 # Temperatura
 g = 10000 # Precision de las Lookup-tables
 niter = 1000 # Nr de iteraciones que se van a realizar
 
+tiempo = np.arange(niter)
+
 # Parametros internos
 L = (N / rho)**(1.0 / 3.0) # Longitud de la caja
 rc = 2.5 # Distancia de corte para el potencial y la fuerza
@@ -182,16 +184,16 @@ p_vel = vel.ctypes.data_as(flp)
 ##############################
 
 
-plt.ion()
-fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
-
-ax.set_xlim([0, L])
-ax.set_ylim([0, L])
-ax.set_zlim([0, L])
-
-x, y, z = transforma_xyz(pos)
-scatter = ax.scatter(x, y, z)
-vx, vy, vz = transforma_xyz(vel)
+# plt.ion()
+# fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+#
+# ax.set_xlim([0, L])
+# ax.set_ylim([0, L])
+# ax.set_zlim([0, L])
+#
+# x, y, z = transforma_xyz(pos)
+# scatter = ax.scatter(x, y, z)
+# vx, vy, vz = transforma_xyz(vel)
 # quiver = ax.quiver(x, y, z, vx, vy, vz)
 
 # Variable auxiliar para elegir si resolver de forma exacta o no.
@@ -213,17 +215,19 @@ for i in range(niter):
     cinetica[i] = CLIB.cinetica(p_vel, N)
     energia[i] = cinetica[i] + potencial[i]
 
-    ax.cla()
-    x, y, z = transforma_xyz(pos)
-    scatter = ax.scatter(x, y, z)
-    vx, vy, vz = transforma_xyz(vel)
-    # quiver = ax.quiver(x, y, z, vx, vy, vz)
-    ax.set_xlim([0, L])
-    ax.set_ylim([0, L])
-    ax.set_zlim([0, L])
-    plt.draw()
-    plt.pause(0.0001)
+    # ax.cla()
+    # x, y, z = transforma_xyz(pos)
+    # scatter = ax.scatter(x, y, z)
+    # vx, vy, vz = transforma_xyz(vel)
+    # # quiver = ax.quiver(x, y, z, vx, vy, vz)
+    # ax.set_xlim([0, L])
+    # ax.set_ylim([0, L])
+    # ax.set_zlim([0, L])
+    # plt.draw()
+    # plt.pause(0.0001)
 
+path = '../datos/'
+name = 'ej1a'
 
 # Desviaciones de cada energia (Medido despues de termalizar)
 sigma_cinetica = np.std(cinetica[400:])
@@ -235,37 +239,34 @@ avg_cinetica = np.mean(cinetica[400:])
 avg_potencial = np.mean(potencial[400:])
 avg_energia = np.mean(energia[400:])
 
+np.save(path + name + '_avg_energia', energia)
+np.save(path + name + '_avg_cinetica', cinetica)
+np.save(path + name + '_avg_potencial', potencial)
+np.save(path + name + '_tiempo', tiempo)
+
 print("Energia potencial = " + str(avg_potencial) + " +- " + str(sigma_potencial))
 print("Energia cinetica = " + str(avg_cinetica) + " +- " + str(sigma_cinetica))
 print("Energia total = " + str(avg_energia) + " +- " + str(sigma_energia))
 
 # Grafica las tres energias en el mismo grafico
-<<<<<<< HEAD
-plt.ion()
-fig2, ax2 = plt.subplots(1)
-ax2.plot(energia, 'k.')
-ax2.plot(cinetica, 'r.')
-ax2.plot(potencial, 'b.')
-plt.xlabel(r'Tiempo')
-plt.ylabel('Energia')
-plt.show()
-
-# Grafica la cinetica y la potencial en un corto rango
-# Para mostrar que se complementan
-plt.ion()
-fig3, ax3 = plt.subplots(2, sharex=True)
-ax3[0].plot(cinetica[400:900], 'r.', label='Energia cinetica')
-ax3[1].plot(potencial[400:900], 'b.', label='Energia potencial')
-plt.xlabel(r'Tiempo')
-ax3[0].set_ylabel(r'Energia cinetica')
-ax3[1].set_ylabel(r'Energia potencial')
-ax3[0].set_title('Energia cinetica')
-ax3[1].set_title('Energia potencial')
-plt.show()
-=======
+# plt.ion()
 # fig2, ax2 = plt.subplots(1)
-# ax2.plot(energia, 'k.')
-# ax2.plot(cinetica, 'r.')
-# ax2.plot(potencial, 'b.')
+# ax2.plot(tiempo, energia, 'k.')
+# ax2.plot(tiempo, cinetica, 'r.')
+# ax2.plot(tiempo, potencial, 'b.')
+# plt.xlabel(r'Tiempo')
+# plt.ylabel('Energia')
 # plt.show()
->>>>>>> f5638d5aa45a1a2731fcae88bbff2f705840e64e
+#
+# # Grafica la cinetica y la potencial en un corto rango
+# # Para mostrar que se complementan
+# plt.ion()
+# fig3, ax3 = plt.subplots(2, sharex=True)
+# ax3[0].plot(tiempo[400:900], cinetica[400:900], 'r.', label='Energia cinetica')
+# ax3[1].plot(tiempo[400:900], potencial[400:900], 'b.', label='Energia potencial')
+# plt.xlabel(r'Tiempo')
+# ax3[0].set_ylabel(r'Energia cinetica')
+# ax3[1].set_ylabel(r'Energia potencial')
+# ax3[0].set_title('Energia cinetica')
+# ax3[1].set_title('Energia potencial')
+# plt.show()
