@@ -24,7 +24,7 @@ for i in range(puntos):
 print('Hecho.' + ' ' * 20 + '\n')
 
 fig, ax = plt.subplots(1)
-ax.plot(T, b, label='Coeficiente de Lindemann')
+ax.plot(T, a, label='Coeficiente de Lindemann')
 ax.set_xlabel('$T$')
 ax.set_ylabel('Coeficiente de Lindemann')
 ax.legend()

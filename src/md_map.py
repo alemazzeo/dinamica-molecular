@@ -10,24 +10,22 @@ import matplotlib.pyplot as plt
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-name', type=str, default='map1')
 parser.add_argument('-path', type=str, default='../datos/maps/n125/')
 parser.add_argument('-N', type=int, default=125)
 parser.add_argument('-T_start', type=float, default=2.0)
-parser.add_argument('-T_stop', type=float, default=0.2)
+parser.add_argument('-T_stop', type=float, default=0.22)
 parser.add_argument('-T_step', type=float, default=0.02)
-parser.add_argument('-rho_start', type=float, default=0.1)
-parser.add_argument('-rho_stop', type=float, default=0.9)
+parser.add_argument('-rho_start', type=float, default=0.02)
+parser.add_argument('-rho_stop', type=float, default=0.1)
 parser.add_argument('-rho_step', type=float, default=0.02)
 parser.add_argument('-preterm', type=int, default=500)
 parser.add_argument('-term', type=int, default=50)
-parser.add_argument('-m', type=int, default=100)
-parser.add_argument('-dc', type=int, default=100)
+parser.add_argument('-m', type=int, default=200)
+parser.add_argument('-dc', type=int, default=50)
 parser.add_argument('-plot', action='store_true')
 
 params = parser.parse_args()
 
-name = params.name
 path = params.path
 
 N = params.N
@@ -101,10 +99,11 @@ for i, rho in enumerate(rhos):
         nombre_md = 'md_' + str(N) + '_r_%5.3f' % rho + '_T_%5.3f' % T + '.npy'
         mdsys.save(nombre=nombre_md, ruta=path)
 
-np.save(path + name + '_avg_energia', avg_energia)
-np.save(path + name + '_std_energia', std_energia)
-np.save(path + name + '_avg_presion', avg_presion)
-np.save(path + name + '_std_presion', std_presion)
+intervalo = 'rho_%5.3f_a_%5.3f' % (rho_start, rho_stop)
+np.save(path + intervalo + '_avg_energia', avg_energia)
+np.save(path + intervalo + '_std_energia', std_energia)
+np.save(path + intervalo + '_avg_presion', avg_presion)
+np.save(path + intervalo + '_std_presion', std_presion)
 
 
 if params.plot:
