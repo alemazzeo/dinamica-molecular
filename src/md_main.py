@@ -31,7 +31,7 @@ termalizacion = params.termalizacion
 n_temps = int(abs((start - stop) / step))
 
 md1 = md(N=N, T=start, rho=rho)
-md1.n_pasos(termalizacion) # termalizacion
+md1.n_pasos(termalizacion)  # termalizacion
 
 temps = np.linspace(start, stop, n_temps)
 energia = np.zeros(n_temps, dtype=float)
@@ -40,10 +40,10 @@ std_energia = np.zeros(n_temps, dtype=float)
 std_presion = np.zeros(n_temps, dtype=float)
 
 for i, T in enumerate(temps):
-    print "%3d/%3d" % (i, n_temps)
-    md1._rescaling(T)
+    print("%3d/%3d" % (i, n_temps), end='\r')
+    md1.rescaling(T)
     md1.n_pasos(50)
-    e, p = md1.muestreo()
+    e, p = md1.tomar_muestra(m=100, dc=50)
     energia[i] = e[0]
     std_energia[i] = e[1]
     presion[i] = p[0]
@@ -53,4 +53,4 @@ if params.plot:
     plt.ion()
     fig, axs = plt.subplots(2)
     axs[0].errorbar(temps, energia, yerr=std_energia)
-    axs[1].errorbar(1/temps, presion, yerr=std_presion)
+    axs[1].errorbar(1 / temps, presion, yerr=std_presion)
