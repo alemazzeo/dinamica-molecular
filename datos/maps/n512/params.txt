@@ -1,0 +1,10 @@
+T_start:   2.000
+T_stop:    0.040
+T_step:    0.040
+rho_start  0.020
+rho_stop:  1.000
+rho_step:  0.020
+term:         50
+preterm:     500
+m:           200
+dc:           50

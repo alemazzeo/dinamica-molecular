@@ -370,64 +370,66 @@ class md():
         self._distrad = [i / (n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
-    def lindemann(self, m=100, paso_intermedio=1, promedio=100, plot=False):
+    def lindemann(self, m=100, promedio=100, plot=False, ax=None):
         '''
         Calcula el coeficiente de Lindemann, calculando las dispersiones de
         las posiciones para m pasos temporales.
         '''
 
-        N = self._N
+        N = self.N
+        L = self.L
 
-        lind_matriz = np.zeros((promedio, m))
+        saltos = np.zeros(3 * N, dtype=float)
+        lind_matriz = np.zeros((promedio, m), dtype=float)
 
         for i in range(promedio):
-            acum_rj = np.zeros(N)
-            acum_rj2 = np.zeros(N)
+            pos_anterior = np.copy(self._pos)
+            r = np.zeros((m + 1, 3 * N), dtype=float)
 
             for j in range(m):
-                # Da los pasos intermedios
-                self.n_pasos(paso_intermedio)
+                # Da un paso
+                self.paso()
 
-                # Cambia el origen de coordenadas de las posiciones al centro
-                pos_aux = self._pos - self._L / 2
-                # Calcula los cuadrados de las coordenadas
-                pos_aux = pos_aux ** 2
-                # Cambia la forma del array a N vectores X², Y², Z²
-                pos_aux = pos_aux.reshape(self._N, 3)
-                # Suma las coordenadas cuadradas para obtener dist. cuadradas
-                rj2 = pos_aux.sum(axis=1)
+                # Calcula la diferencia con posición la anterior
+                dx = self._pos - pos_anterior
 
-                # Calcula las distancias tomando raiz
-                rj = rj2**0.5
+                # Detecta las diferencias mayores a L/2 (saltos por CC)
+                saltos = abs(dx) > (L / 2)
 
-                # Acumula r y r2 para promediar
-                acum_rj += rj
-                acum_rj2 += rj2
+                # Compensa las diferencias sumando o restando L
+                dx[saltos] -= np.sign(dx[saltos]) * L
 
-                # Calcula los promedios para el paso actual
-                avg_rj = acum_rj / (j + 1)
-                avg_rj2 = acum_rj2 / (j + 1)
+                # Añade la una nueva fila al matriz de posiciones
+                r[j + 1] = r[j] + dx
 
-                # Calcula la varianza (<x**2> - <x>**2)
-                var_rj = abs(avg_rj2 - avg_rj**2)
+                # Calcula las varianzas de las posiciones
+                var_r = np.var(r[0:j + 1, :], axis=0)
 
                 # Calcula el coeficiente de Lindemann
-                lind = np.sqrt(np.sum(var_rj) / N)
+                lind = np.mean(var_r)**0.5
 
+                # Actualiza la matriz de coeficientes
                 lind_matriz[i][j] = lind
 
-        lind_array = np.average(lind_matriz, axis=0)
+                # Guarda la posición para el siguiente paso
+                pos_anterior = np.copy(self._pos)
+
+        lind_avg = np.average(lind_matriz, axis=0)
+        lind_std = np.std(lind_matriz, axis=0)
 
         if plot:
-            fig, ax = plt.subplots(1)
-            x = np.arange(1, (m * paso_intermedio) + 1, paso_intermedio)
-            ax.plot(x, lind_array, label='Coeficiente de Lindemann')
+            if ax is None:
+                plt.ion()
+                fig, ax = plt.subplots(1)
+            x = np.arange(1, m + 1)
+            ax.set_ylim(0, 1)
+            ax.plot(x, lind_avg, label='Coef. de Lindemann - T: %6.3f' %
+                    self.T)
             ax.set_xlabel('Pasos')
             ax.set_ylabel('Coef. Lindemann')
             ax.legend(loc='best')
-            plt.show()
 
-        return lind, lind_array
+        return lind_avg, lind_std, r
 
     def save(self, nombre='temp.npy', ruta='../datos/'):
         '''
