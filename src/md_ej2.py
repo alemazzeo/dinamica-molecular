@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from md_class import md
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -38,6 +40,13 @@ archivos = os.listdir(ruta)
 
 temps = np.load(ruta + 'temps.npy')
 rhos = np.load(ruta + 'rhos.npy')
+
+estados = os.listdir(ruta + '/estados/')
+estados = [[float(a[-17:-12]), float(a[-9:-4]), ruta + '/estados/' + a]
+           for a in estados]
+estados.sort()
+estados = np.asarray(estados)
+estados = np.reshape(estados.T[2], (len(temps), len(rhos)))
 
 avg_energia = [[int(a.split('_')[2]), a] for a in archivos
                if a.startswith('avg_energia')]

@@ -6,8 +6,8 @@ import ctypes as C
 import numpy as np
 
 import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
-from mpl_toolkits.mplot3d import Axes3D
 
 import os
 
@@ -30,8 +30,8 @@ CLIB.cinetica.argtypes = [flp, C.c_int]
 CLIB.potencial.argtypes = [flp, C.c_int, C.c_float, flp, C.c_int, C.c_float]
 CLIB.potencial_exacto.argtypes = [flp, C.c_int, C.c_float, C.c_float]
 
-CLIB.distrib_radial.argtypes = [
-    flp, flp, C.c_float, C.c_float, C.c_float, C.c_float]
+CLIB.distrib_radial.argtypes = [flp, flp, C.c_float, C.c_float, C.c_float,
+                                C.c_float]
 
 # Return types
 CLIB.cinetica.restype = C.c_float
@@ -186,19 +186,21 @@ class md():
         # Resta el promedio para evitar que Pt sea igual a cero
         vel -= np.mean(vel)
 
+        # Calcula la T inicial
+        self._T = np.var(vel)
+
         # Devuelve las velocidades como vector de c_floats
         return vel.astype(C.c_float)
 
-    def ver_pos(self, plot_vel=False, ax=None, size=30):
+    def ver_pos(self, plot_vel=False, size=30):
         '''
         Grafica las posiciones y velocidades (opcional)
         '''
-        if ax is None:
-            plt.ion()
-            fig, ax = plt.subplots(subplot_kw=dict(projection='3d'))
+        fig = plt.figure()
+        ax = p3.Axes3D(fig)
 
         x, y, z = self.transforma_xyz(self._pos)
-        scatter = ax.scatter(x, y, z, s=size, alpha=0.7)
+        scatter = ax.scatter(x, y, z, s=size)
 
         ax.set_xlim([0, self._L])
         ax.set_ylim([0, self._L])
@@ -210,7 +212,7 @@ class md():
         else:
             quiver = None
 
-        return fig, ax, scatter, quiver
+        return scatter, quiver
 
     def paso(self):
         """
@@ -276,85 +278,98 @@ class md():
         '''
         return self._p_exceso / 3
 
-    def rescaling(self, T):
+    def rescaling(self, T_deseada, T_actual):
         '''
         Realiza el rescaling de velocidades
         '''
-        self._vel *= np.sqrt(T / self._T)
-        self._T = T
+        self._vel *= (T_deseada / T_actual)**0.5
 
-    def nueva_T(self, T, dT=0.01, term=100):
+    def calc_temp(self):
         '''
-        Realiza los rescaling y n_pasoses necesarios para llegar a T
+        Calcula la temperatura segun Boltzmann
         '''
+        return np.var(self._vel)
 
-        # Corrige el signo de dT si es necesario
-        if T < self.T:
-            dT = -abs(dT)
-        else:
-            dT = abs(dT)
-
-        while abs(T - self._T) > 0:
-
-            # Corrige dT si es mayor a la diferencia de temperaturas
-            if dT > T - self._T:
-                dT = T - self._T
-
-            self.rescaling(self._T + dT)
-            self.n_pasos()
-
-    def llenar_vectores(self, m, plot=False):
-        '''
-        Promedia m valores de energia y presion
-        '''
-        energia = np.zeros(m, dtype=float)
-        presion = np.zeros(m, dtype=float)
-
-        for i in range(m):
-            self.paso()
-            energia[i] = self.calc_energia()
-            presion[i] = self.calc_presion()
-
-        if plot:
-            fig, ax = plt.subplots(2)
-            ax[0].plot(energia)
-            ax[1].plot(presion)
-            plt.show()
-
-        return energia, presion
-
-    def prueba_piloto(self, precision, m_piloto=20, dc=100):
+    def prueba_piloto(self, precision, m_piloto=10, subm=50, dc=250):
         '''
         Estima para la precision deseada la cantidad de promedios a considerar
         '''
         x = np.zeros(m_piloto, dtype=float)
 
         for i in range(m_piloto):
-            energia, presion = self.llenar_vectores(dc)
+            self.n_pasos(dc)
+            energia, presion = self.llenar_vectores(subm)
             x[i] = np.mean(energia)
 
         var_piloto = np.var(x)
 
         return int(m_piloto * var_piloto / (precision**2)), var_piloto**0.5
 
-    def tomar_muestra(self, m=50, dc=100):
+    def llenar_vectores(self, subm, k=10, plot=False):
+        '''
+        Promedia subm valores de energia y presion saltandose k pasos
+        '''
+        temp = np.zeros(subm, dtype=float)
+        energia = np.zeros(subm, dtype=float)
+        presion = np.zeros(subm, dtype=float)
+
+        for i in range(subm):
+            self.n_pasos(k)
+            temp[i] = self.calc_temp()
+            energia[i] = self.calc_energia()
+            presion[i] = self.calc_presion()
+
+        if plot:
+            fig, ax = plt.subplots(2)
+
+            ax[0].plot(energia)
+            ax[1].plot(presion)
+            plt.show()
+
+        return temp, energia, presion
+
+    def tomar_muestra(self, m=20, subm=20, dc=200, k=50):
         '''
         Toma n muestras promediando 'm' grupos de 'dc' pasos
         '''
+        t, e, p = 0.0, 0.0, 0.0
+        temp = np.zeros(m, dtype=float)
         energia = np.zeros(m, dtype=float)
         presion = np.zeros(m, dtype=float)
 
         for i in range(m):
-            e, p = self.llenar_vectores(dc)
+            self.n_pasos(dc)
+            t, e, p = self.llenar_vectores(subm)
+            temp[i] = np.mean(t)
             energia[i] = np.mean(e)
             presion[i] = np.mean(p)
 
+        avg_temp = np.average(temp)
+        std_temp = np.std(temp)
         avg_energia = np.average(energia)
         std_energia = np.std(energia)
         avg_presion = np.average(presion)
         std_presion = np.std(presion)
 
-        return [avg_energia, std_energia], [avg_presion, std_presion]
+        temp = [avg_temp, std_temp]
+        energia = [avg_energia, std_energia]
+        presion = [avg_presion, std_presion]
+
+        return temp, energia, presion
+
+    def medir_temp(self, m=20, subm=20, dc=200, k=50):
+        '''
+        Mide la temperatura con un criterio identico a tomar_muestra
+        '''
+        temp = np.zeros((m, subm), dtype=float)
+        for i in range(m):
+            self.n_pasos(dc)
+            for j in range(subm):
+                self.n_pasos(k)
+                temp[i, j] = self.calc_temp()
+
+        temp = np.average(temp, axis=1)
+        return temp.mean(), temp.std()
 
     def dist_radial(self, n=100, m=100):
         '''
@@ -370,7 +385,7 @@ class md():
         self._distrad = [i / (n * 0.5 * self._N) for i in self._distrad]
         return self._distrad
 
-    def lindemann(self, m=100, promedio=100, plot=False, ax=None):
+    def lindemann(self, m=10, subm=100, k=50, plot=False, ax=None):
         '''
         Calcula el coeficiente de Lindemann, calculando las dispersiones de
         las posiciones para m pasos temporales.
@@ -380,15 +395,15 @@ class md():
         L = self.L
 
         saltos = np.zeros(3 * N, dtype=float)
-        lind_matriz = np.zeros((promedio, m), dtype=float)
+        lind_matriz = np.zeros((m, subm), dtype=float)
 
-        for i in range(promedio):
+        for i in range(m):
             pos_anterior = np.copy(self._pos)
-            r = np.zeros((m + 1, 3 * N), dtype=float)
+            r = np.zeros((subm + 1, 3 * N), dtype=float)
 
-            for j in range(m):
+            for j in range(subm):
                 # Da un paso
-                self.paso()
+                self.n_pasos(k)
 
                 # Calcula la diferencia con posición la anterior
                 dx = self._pos - pos_anterior
@@ -421,7 +436,7 @@ class md():
             if ax is None:
                 plt.ion()
                 fig, ax = plt.subplots(1)
-            x = np.arange(1, m + 1)
+            x = np.arange(1, subm + 1) * k
             ax.set_ylim(0, 1)
             ax.plot(x, lind_avg, label='Coef. de Lindemann - T: %6.3f' %
                     self.T)
@@ -429,7 +444,7 @@ class md():
             ax.set_ylabel('Coef. Lindemann')
             ax.legend(loc='best')
 
-        return lind_avg, lind_std, r
+        return lind_avg, lind_std
 
     def save(self, nombre='temp.npy', ruta='../datos/'):
         '''
@@ -474,21 +489,37 @@ class md():
 
         return md_load
 
-    def _mascara(self, d=0.2):
-        '''
-        Devuelve una máscara de las particulas contenidas en la caja
-        de tamaño L * (1-d) centrada en la caja original
-        '''
-        x, y, z = self.transforma_xyz(self._pos)
-        N = self.N
-        L = self.L
+    def animacion(self, frames=1000, n_pasos=2):
 
-        mask_x = (x > d * L) * (x < (1 - d) * L)
-        mask_y = (y > d * L) * (y < (1 - d) * L)
-        mask_z = (z > d * L) * (z < (1 - d) * L)
-        mask = mask_x * mask_y * mask_z
-        mask3N = np.zeros((N, 3), dtype=bool)
-        mask3N[mask] = 1
-        mask3N = mask3N.reshape(3 * N)
+        pos = np.zeros((frames, 3 * self.N), dtype=float)
+        for i in range(frames):
+            self.n_pasos(n_pasos)
+            pos[i] = np.copy(self._pos)
 
-        return mask3N
+        fig = plt.figure()
+        ax = p3.Axes3D(fig)
+
+        x, y, z = self.transforma_xyz(pos[0])
+        particulas = [ax.plot([x[j]], [y[j]], [z[j]], ls='', marker='o')
+                      for j in range(self._N)]
+
+        def update(i, pos, particulas):
+            x, y, z = self.transforma_xyz(pos[i])
+            for j, particula in enumerate(particulas):
+                particula[0].set_data([x[j], y[j]])
+                particula[0].set_3d_properties(z[j])
+            return particulas
+
+        ax.set_xlim([0, self._L])
+        ax.set_ylim([0, self._L])
+        ax.set_zlim([0, self._L])
+
+        animacion = animation.FuncAnimation(fig, update, frames,
+                                            fargs=(pos, particulas),
+                                            interval=1, blit=False)
+
+        try:
+            plt.show()
+        except AttributeError:
+            pass
+        return animacion
