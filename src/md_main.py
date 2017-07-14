@@ -275,7 +275,7 @@ def plot_temperatura(ax=None):
     ax.errorbar(array_pasos, temp, ls='--', marker=' ',
                 label='Temperatura buscada')
     ax.set_xlabel('Muestras')
-    ax.set_ylabel('Temperatura')
+    ax.set_ylabel('Temperatura ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -286,7 +286,7 @@ def plot_energia(ax=None):
     ax.errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
                 label='Energía', ls=' ', marker='o')
     ax.set_xlabel('Temperatura')
-    ax.set_ylabel('Energía')
+    ax.set_ylabel('Energía ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -299,7 +299,7 @@ def plot_presion(ax=None):
     ax.errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
                 label='Presión', ls=' ', marker='o')
     ax.set_xlabel('$1/T$')
-    ax.set_ylabel('Presión')
+    ax.set_ylabel(r'Presión ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -310,7 +310,7 @@ def plot_lindemann(ax=None):
     ax.errorbar(energia, ld_avg, xerr=std_energia, yerr=ld_std[-1],
                 label='Coef. de Lindemann', ls=' ', marker='o')
     ax.set_xlabel('Energía')
-    ax.set_ylabel('Coef. de Lindemann')
+    ax.set_ylabel(r'Coef. de Lindemann ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -320,15 +320,15 @@ def plot_lindemann_array(index=-1, ax=None, errorbar=True):
 
     x = np.arange(100) * 50
     y, yerr = np.load(lds[index])
-    str_rho = r'$\rho$ ' + '%-6.3f' % float(lds[index].split('_')[2])
-    str_temp = r'$T$ ' + '%-6.3f' % float(lds[index].split('_')[4])
+    str_rho_ld = r'$\rho$ ' + '%-6.3f' % float(lds[index].split('_')[2])
+    str_temp_ld = r'$T$ ' + '%-6.3f' % float(lds[index].split('_')[4])
 
     if errorbar:
         ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp)
     else:
-        ax.plot(x, y, label='LD - ' + str_temp)
+        ax.plot(x, y, label='LD - ' + str_temp_ld)
     ax.set_xlabel('Pasos')
-    ax.set_ylabel('Coef. de Lindemann (' + str_rho + ')')
+    ax.set_ylabel('Coef. de Lindemann (' + str_rho_ld + ')')
     ax.legend(loc='best', ncol=2)
 
 

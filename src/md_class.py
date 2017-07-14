@@ -109,7 +109,7 @@ class md():
 
     @property
     def T(self):
-        return self._T
+        return self.calc_temp
 
     @property
     def lut_precision(self):
