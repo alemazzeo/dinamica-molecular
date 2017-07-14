@@ -29,9 +29,6 @@ import sys
 # Figura (tamaño)
 plt.rc('figure', figsize=(8, 6))
 
-# Lineas (color)
-plt.rc('lines', color='0.0')
-
 # Ticks (tamaño de la fuente)
 plt.rc(('xtick', 'ytick'), labelsize=14)
 
@@ -45,9 +42,35 @@ plt.rc('legend', fontsize=14, loc='best')
 plt.rc('axes', labelsize=14)
 
 # Ejes (autoestilo para múltiples curvas)
+lc_cycler = cycler('color', ['0.0', '0.5'])
 lw_cycler = cycler('lw', [2, 1])
-ls_cycler = cycler('ls', ['-', '-.', '--', ':'])
-plt.rc('axes', prop_cycle=lw_cycler * ls_cycler)
+ls_cycler = cycler('ls', ['-', '--', ':'])
+plt.rc('axes', prop_cycle=lc_cycler * lw_cycler * ls_cycler)
+
+
+################
+# DOCUMENTACIÓN
+################
+
+def doc():
+    print('\nCaracterísticas disponibles\n' + '-' * 27)
+    print('\nFunciones para graficar:\n')
+    print('    plot_temperatura(ax=None)')
+    print('    plot_energia(ax=None)')
+    print('    plot_presion(ax=None)')
+    print('    plot_lindemann(ax=None)')
+    print('    plot_lindemann_array(index=-1, ax=None, errorbar=True)\n')
+    print('    (por defecto se grafican en figuras independientes)\n')
+    print('    plot_main()')
+    print('\nFunciones para manipular o ver estados:\n')
+    print('    list_md()')
+    print('    load_md(index=-1)\n')
+    print('    mdsys.ver_pos(plot_vel=False, size=30)')
+    print('    mdsys.dist_radial(n=100, m=100)')
+    print('    mdsys.lindemann(m=10, subm=100, k=50, plot=False, ax=None)')
+    print('    mdsys.ver_pos(plot_vel=False, size=30)')
+    print('    mdsys.animacion(frames=1000, n_pasos=2)')
+
 
 ######################
 # PARÁMETROS EXTERNOS
@@ -62,10 +85,10 @@ parser.add_argument('-dT', type=float, default=-0.025)
 parser.add_argument('-pasos', type=int, default=76)
 parser.add_argument('-pterm', type=int, default=5000)
 parser.add_argument('-term', type=int, default=1000)
-parser.add_argument('-m', type=int, default=20)
-parser.add_argument('-subm', type=int, default=20)
+parser.add_argument('-m', type=int, default=30)
+parser.add_argument('-subm', type=int, default=30)
 parser.add_argument('-dc', type=int, default=150)
-parser.add_argument('-k', type=int, default=30)
+parser.add_argument('-k', type=int, default=50)
 parser.add_argument('-actual', type=int, default=0)
 parser.add_argument('-plot', action='store_true')
 
@@ -152,12 +175,26 @@ if os.path.isfile(nombre_cfg) and os.path.isfile(nombre_mds):
         mds = np.load(nombre_mds).tolist()
         mdsys = md.load(mds[-1])
 
-    if rta == 'R':
-        np.save(nombre_cfg, [int_params, float_params])
-        np.save(nombre_lds, lds)
-        np.save(nombre_mds, mds)
+        print('Simulación cargada.')
 
-    if rta == 'S':
+        doc()
+
+    elif rta == 'R':
+        msj = 'Esta acción no puede deshacerse. ¿Continuar? (S/N): '
+        rta2 = input(msj).upper()
+        while rta2 not in ('SI', 'NO', 'S', 'N'):
+            rta2 = input(msj).upper()
+        if rta2 in ('SI', 'S'):
+            np.save(nombre_cfg, [int_params, float_params])
+            np.save(nombre_lds, lds)
+            np.save(nombre_mds, mds)
+        else:
+            sys.exit()
+
+    elif rta == 'S':
+        sys.exit()
+
+    else:
         sys.exit()
 
 
@@ -229,37 +266,92 @@ def siguiente_paso(paso):
     np.save(nombre_mds, mds)
 
 
-def plot_main():
-    plt.ion()
-    fig, axs = plt.subplots(2, 2)
+def plot_temperatura(ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1)
 
-    axs[0][0].errorbar(array_pasos, temp_real, yerr=std_temp,
-                       label='Temperatura (<v²>)', ls=' ', marker='o')
-    axs[0][0].errorbar(array_pasos, temp, ls='--', marker=' ',
-                       label='Temperatura buscada')
-    axs[0][0].set_xlabel('Muestras')
-    axs[0][0].set_ylabel('Temperatura')
-    axs[0][0].legend(loc='best')
+    ax.errorbar(array_pasos, temp_real, yerr=std_temp,
+                label='Temperatura (<v²>)', ls=' ', marker='o')
+    ax.errorbar(array_pasos, temp, ls='--', marker=' ',
+                label='Temperatura buscada')
+    ax.set_xlabel('Muestras')
+    ax.set_ylabel('Temperatura')
+    ax.legend(loc='best')
 
-    axs[0][1].errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
-                       label='Energía', ls=' ', marker='o')
-    axs[0][1].set_xlabel('Temperatura')
-    axs[0][1].set_ylabel('Energía')
-    axs[0][1].legend(loc='best')
+
+def plot_energia(ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    ax.errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
+                label='Energía', ls=' ', marker='o')
+    ax.set_xlabel('Temperatura')
+    ax.set_ylabel('Energía')
+    ax.legend(loc='best')
+
+
+def plot_presion(ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1)
 
     inv_temp = 1 / temp_real
     inv_std_temp = inv_temp**2 * std_temp
-    axs[1][0].errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
-                       label='Presión', ls=' ', marker='o')
-    axs[1][0].set_xlabel('$1/T$')
-    axs[1][0].set_ylabel('Presión')
-    axs[1][0].legend(loc='best')
+    ax.errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
+                label='Presión', ls=' ', marker='o')
+    ax.set_xlabel('$1/T$')
+    ax.set_ylabel('Presión')
+    ax.legend(loc='best')
 
-    axs[1][1].errorbar(energia, ld_avg, xerr=std_energia, yerr=ld_std[-1],
-                       label='Coef. de Lindemann', ls=' ', marker='o')
-    axs[1][1].set_xlabel('Energía')
-    axs[1][1].set_ylabel('Coef. de Lindemann')
-    axs[1][1].legend(loc='best')
+
+def plot_lindemann(ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    ax.errorbar(energia, ld_avg, xerr=std_energia, yerr=ld_std[-1],
+                label='Coef. de Lindemann', ls=' ', marker='o')
+    ax.set_xlabel('Energía')
+    ax.set_ylabel('Coef. de Lindemann')
+    ax.legend(loc='best')
+
+
+def plot_lindemann_array(index=-1, ax=None, errorbar=True):
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    x = np.arange(100) * 50
+    y, yerr = np.load(lds[index])
+    str_rho = r'$\rho$ ' + '%-6.3f' % float(lds[index].split('_')[2])
+    str_temp = r'$T$ ' + '%-6.3f' % float(lds[index].split('_')[4])
+
+    if errorbar:
+        ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp)
+    else:
+        ax.plot(x, y, label='LD - ' + str_temp)
+    ax.set_xlabel('Pasos')
+    ax.set_ylabel('Coef. de Lindemann (' + str_rho + ')')
+    ax.legend(loc='best', ncol=2)
+
+
+def plot_main():
+    plt.ion()
+    fig, axs = plt.subplots(2, 2)
+    plot_temperatura(axs[0][0])
+    plot_energia(axs[0][1])
+    plot_presion(axs[1][0])
+    plot_lindemann(axs[1][1])
+    plot_lindemann_array(-1)
+
+
+def list_md():
+    for i, name in enumerate(mds):
+        flt_rho = float(name.split('_')[2])
+        flt_temp = float(name.split('_')[4])
+        print('%3d, %-6.3f, %-6.3f -> %40s' % (i, flt_rho, flt_temp, name))
+
+
+def load_md(index=-1):
+    global mdsys
+    mdsys = md.load(mds[index])
 
 
 #####################
@@ -287,6 +379,9 @@ if actual < pasos and continuar:
 
     for i in range(actual, pasos):
         siguiente_paso(i)
+
+    print('Simulación finalizada\n')
+    doc()
 
 if args_params.plot:
     plot_main()

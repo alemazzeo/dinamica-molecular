@@ -339,7 +339,7 @@ class md():
 
         for i in range(m):
             self.n_pasos(dc)
-            t, e, p = self.llenar_vectores(subm)
+            t, e, p = self.llenar_vectores(subm, k)
             temp[i] = np.mean(t)
             energia[i] = np.mean(e)
             presion[i] = np.mean(p)
@@ -516,10 +516,7 @@ class md():
 
         animacion = animation.FuncAnimation(fig, update, frames,
                                             fargs=(pos, particulas),
-                                            interval=1, blit=False)
+                                            interval=50, blit=False)
 
-        try:
-            plt.show()
-        except AttributeError:
-            pass
+        plt.show()
         return animacion
