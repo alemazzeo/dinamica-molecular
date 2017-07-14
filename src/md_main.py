@@ -78,8 +78,8 @@ def doc():
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-ruta', type=str, default='../datos/temp/')
-parser.add_argument('-N', type=int, default=125)
-parser.add_argument('-rho', type=float, default=0.9)
+parser.add_argument('-N', type=int, default=512)
+parser.add_argument('-rho', type=float, default=0.4)
 parser.add_argument('-T', type=float, default=2.0)
 parser.add_argument('-dT', type=float, default=-0.025)
 parser.add_argument('-pasos', type=int, default=76)
@@ -275,7 +275,7 @@ def plot_temperatura(ax=None):
     ax.errorbar(array_pasos, temp, ls='--', marker=' ',
                 label='Temperatura buscada')
     ax.set_xlabel('Muestras')
-    ax.set_ylabel('Temperatura ($\rho$' + str_rho + ')')
+    ax.set_ylabel(r'Temperatura ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -286,7 +286,7 @@ def plot_energia(ax=None):
     ax.errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
                 label='Energía', ls=' ', marker='o')
     ax.set_xlabel('Temperatura')
-    ax.set_ylabel('Energía ($\rho$' + str_rho + ')')
+    ax.set_ylabel(r'Energía ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
@@ -298,7 +298,7 @@ def plot_presion(ax=None):
     inv_std_temp = inv_temp**2 * std_temp
     ax.errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
                 label='Presión', ls=' ', marker='o')
-    ax.set_xlabel('$1/T$')
+    ax.set_xlabel(r'$1/T$')
     ax.set_ylabel(r'Presión ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
@@ -324,7 +324,7 @@ def plot_lindemann_array(index=-1, ax=None, errorbar=True):
     str_temp_ld = r'$T$ ' + '%-6.3f' % float(lds[index].split('_')[4])
 
     if errorbar:
-        ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp)
+        ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp_ld)
     else:
         ax.plot(x, y, label='LD - ' + str_temp_ld)
     ax.set_xlabel('Pasos')
