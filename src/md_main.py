@@ -41,6 +41,9 @@ plt.rc('legend', fontsize=14, loc='best')
 # Ejes (tamaño de la fuente)
 plt.rc('axes', labelsize=14)
 
+# Errorbar
+plt.rc('errorbar', capsize=2.0)
+
 # Ejes (autoestilo para múltiples curvas)
 lc_cycler = cycler('color', ['0.0', '0.5'])
 lw_cycler = cycler('lw', [2, 1])
@@ -266,49 +269,63 @@ def siguiente_paso(paso):
     np.save(nombre_mds, mds)
 
 
-def plot_temperatura(ax=None):
+def plot_temperatura(ax=None, errorbar=True):
     if ax is None:
         fig, ax = plt.subplots(1)
 
-    ax.errorbar(array_pasos, temp_real, yerr=std_temp,
-                label='Temperatura (<v²>)', ls=' ', marker='o')
-    ax.errorbar(array_pasos, temp, ls='--', marker=' ',
-                label='Temperatura buscada')
+    if errorbar:
+        ax.errorbar(array_pasos, temp_real, yerr=std_temp, elinewidth=0.5,
+                    label='Temperatura (<v²>)', ls=' ', marker='o')
+    else:
+        ax.plot(array_pasos, temp_real, label='Temperatura (<v²>)',
+                marker='o')
+
+    ax.plot(array_pasos, temp, ls='--', marker=' ',
+            label='Temperatura buscada')
     ax.set_xlabel('Muestras')
     ax.set_ylabel(r'Temperatura ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
-def plot_energia(ax=None):
+def plot_energia(ax=None, errorbar=True):
     if ax is None:
         fig, ax = plt.subplots(1)
 
-    ax.errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
-                label='Energía', ls=' ', marker='o')
+    if errorbar:
+        ax.errorbar(temp_real, energia, xerr=std_temp, yerr=std_energia,
+                    label='Energía', ls=' ', marker='o', elinewidth=0.5)
+    else:
+        ax.plot(temp_real, energia, label='Energía', ls=' ', marker='o')
+
     ax.set_xlabel('Temperatura')
     ax.set_ylabel(r'Energía ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
 
 
-def plot_presion(ax=None):
+def plot_presion(ax=None, errorbar=True):
     if ax is None:
         fig, ax = plt.subplots(1)
 
     inv_temp = 1 / temp_real
     inv_std_temp = inv_temp**2 * std_temp
-    ax.errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
-                label='Presión', ls=' ', marker='o')
+    if errorbar:
+        ax.errorbar(inv_temp, presion, xerr=inv_std_temp, yerr=std_presion,
+                    label='Presión', ls=' ', marker='o', elinewidth=0.5)
+    else:
+        ax.plot(inv_temp, presion, label='Presión', ls=' ', marker='o')
     ax.set_xlabel(r'$1/T$')
     ax.set_ylabel(r'Presión ($\rho$' + str_rho + ')')
+
     ax.legend(loc='best')
 
 
-def plot_lindemann(ax=None):
+def plot_lindemann(ax=None, errorbar=True):
     if ax is None:
         fig, ax = plt.subplots(1)
 
     ax.errorbar(energia, ld_avg, xerr=std_energia, yerr=ld_std[-1],
-                label='Coef. de Lindemann', ls=' ', marker='o')
+                label='Coef. de Lindemann', ls=' ', marker='o',
+                elinewidth=0.5)
     ax.set_xlabel('Energía')
     ax.set_ylabel(r'Coef. de Lindemann ($\rho$' + str_rho + ')')
     ax.legend(loc='best')
@@ -324,7 +341,8 @@ def plot_lindemann_array(index=-1, ax=None, errorbar=True):
     str_temp_ld = r'$T$ ' + '%-6.3f' % float(lds[index].split('_')[4])
 
     if errorbar:
-        ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp_ld)
+        ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp_ld,
+                    elinewidth=0.5)
     else:
         ax.plot(x, y, label='LD - ' + str_temp_ld)
     ax.set_xlabel('Pasos')

@@ -1,20 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# file: md_ej2.py
+
+import matplotlib
+
+try:
+    matplotlib.use('Qt5Agg')
+except:
+    try:
+        matplotlib.use('qt4Agg')
+    except:
+        print('No fue posible configurar Qt5Agg o qt4Agg')
+        print('Se utilizará', matplotlib.get_backend())
 
 from md_class import md
 
-import numpy as np
-import matplotlib.pyplot as plt
-import os
+import argparse
 from cycler import cycler
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from scipy.interpolate import griddata
+import sys
 
-# CONFIGURACIONES POR DEFECTO
+######################
+# PARÁMETROS EXTERNOS
+######################
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-ruta', type=str, default='../datos/corrida2/n512/')
+
+args_params = parser.parse_args()
+ruta = args_params.ruta
+
+###############################################
+# CONFIGURACIONES POR DEFECTO PARA LAS FIGURAS
+###############################################
 
 # Figura (tamaño)
 plt.rc('figure', figsize=(8, 6))
-
-# Lineas (color)
-plt.rc('lines', color='0.0')
 
 # Ticks (tamaño de la fuente)
 plt.rc(('xtick', 'ytick'), labelsize=14)
@@ -28,75 +52,58 @@ plt.rc('legend', fontsize=14, loc='best')
 # Ejes (tamaño de la fuente)
 plt.rc('axes', labelsize=14)
 
+# Errorbar
+plt.rc('errorbar', capsize=2.0)
+
 # Ejes (autoestilo para múltiples curvas)
+lc_cycler = cycler('color', ['0.0', '0.5'])
 lw_cycler = cycler('lw', [2, 1])
-ls_cycler = cycler('ls', ['-', '-.', '--', ':'])
-plt.rc('axes', prop_cycle=lw_cycler * ls_cycler)
+ls_cycler = cycler('ls', ['-', '--', ':'])
+plt.rc('axes', prop_cycle=lc_cycler * lw_cycler * ls_cycler)
 
+####################
 # CARGA DE ARCHIVOS
+####################
 
-ruta = '../datos/maps/n512/'
 archivos = os.listdir(ruta)
 
-temps = np.load(ruta + 'temps.npy')
-rhos = np.load(ruta + 'rhos.npy')
+configs = [[float(a.split('_')[1]), np.load(ruta + a)] for a in archivos
+           if a.endswith('config.npy')]
+configs.sort()
 
-estados = os.listdir(ruta + '/estados/')
-estados = [[float(a[-17:-12]), float(a[-9:-4]), ruta + '/estados/' + a]
-           for a in estados]
-estados.sort()
-estados = np.asarray(estados)
-estados = np.reshape(estados.T[2], (len(temps), len(rhos)))
+datos = [[float(a.split('_')[1]), np.load(ruta + a)] for a in archivos
+         if a.endswith('data.npy')]
+datos.sort()
 
-avg_energia = [[int(a.split('_')[2]), a] for a in archivos
-               if a.startswith('avg_energia')]
-avg_energia.sort()
-avg_energia = [np.load(ruta + a) for i, a in avg_energia]
-avg_energia = np.concatenate(avg_energia).T
+mds_list = [[float(a.split('_')[1]), np.load(ruta + a)] for a in archivos
+            if a.endswith('mds.npy')]
+mds_list.sort()
 
-std_energia = [[int(a.split('_')[2]), a] for a in archivos
-               if a.startswith('std_energia')]
-std_energia.sort()
-std_energia = [np.load(ruta + a) for i, a in std_energia]
-std_energia = np.concatenate(std_energia).T
+lds_list = [[float(a.split('_')[1]), np.load(ruta + a)] for a in archivos
+            if a.endswith('lds.npy')]
+lds_list.sort()
 
-avg_presion = [[int(a.split('_')[2]), a] for a in archivos
-               if a.startswith('avg_presion')]
-avg_presion.sort()
-avg_presion = [np.load(ruta + a) for i, a in avg_presion]
-avg_presion = np.concatenate(avg_presion).T
+rho = []
+array_pasos = []
+temp = []
+temp_real = []
+std_temp = []
+energia = []
+std_energia = []
+presion = []
+std_presion = []
+ld_avg = []
+ld_std = []
 
-std_presion = [[int(a.split('_')[2]), a] for a in archivos
-               if a.startswith('std_presion')]
-std_presion.sort()
-std_presion = [np.load(ruta + a) for i, a in std_presion]
-std_presion = np.concatenate(std_presion).T
-
-#np.save(ruta + 'avg_energia', avg_energia)
-#np.save(ruta + 'std_energia', std_energia)
-#np.save(ruta + 'avg_presion', avg_presion)
-#np.save(ruta + 'std_presion', std_presion)
-
-
-ejes = [rhos[0], rhos[-1], temps[-1], temps[0]]
-
-fig, ax1 = plt.subplots(1)
-
-
-cax = ax1.imshow(avg_energia, origin='upper',
-                 extent=ejes, aspect=0.5, cmap='hot')
-ax1.set_xlabel(r'$\rho*$')
-ax1.set_ylabel(r'$T*$')
-fig.colorbar(cax)
-
-plt.show()
-
-fig, ax2 = plt.subplots(1)
-
-cax = ax2.imshow(avg_presion, origin='upper',
-                 extent=ejes, aspect=0.5, cmap='hot')
-ax2.set_xlabel(r'$\rho*$')
-ax2.set_ylabel(r'$T*$')
-fig.colorbar(cax)
-
-plt.show()
+for r, dato in datos:
+    rho.append(r)
+    array_pasos.append(dato[0])
+    temp.append(dato[1])
+    temp_real.append(dato[2])
+    std_temp.append(dato[3])
+    energia.append(dato[4])
+    std_energia.append(dato[5])
+    presion.append(dato[6])
+    std_presion.append(dato[7])
+    ld_avg.append(dato[8])
+    ld_std.append(dato[9])
