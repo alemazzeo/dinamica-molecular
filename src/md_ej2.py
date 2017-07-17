@@ -204,8 +204,8 @@ def plot_lindemann_array(i=0, j=-1, ax=None, errorbar=True):
 
     x = np.arange(100) * 50
     y, yerr = np.load(lds_list[i][1][j])
-    str_rho_ld = r'$\rho$ ' + '%-6.2f' % float(lds_list[i][1][j].split('_')[2])
-    str_temp_ld = r'$T=$ ' + '%-6.2f' % float(lds_list[i][1][j].split('_')[4])
+    str_rho_ld = r'$\rho$ ' + '%3.1f' % float(lds_list[i][1][j].split('_')[2])
+    str_temp_ld = r'$T=$ ' + '%3.1f' % float(lds_list[i][1][j].split('_')[4])
 
     if errorbar:
         ax.errorbar(x, y, yerr=yerr, marker='.', label='LD - ' + str_temp_ld,
@@ -216,7 +216,7 @@ def plot_lindemann_array(i=0, j=-1, ax=None, errorbar=True):
     ax.set_xlabel('Pasos')
     ax.set_ylabel('Coef. de Lindemann (' + str_rho_ld + ')')
     ax.annotate(str_temp_ld, xy=(x[-1], y[-1]), xytext=(x[-1] + 100, y[-1]),
-                fontsize=14)
+                fontsize=14, verticalalignment='center')
     ax.set_xlim([-50, x[-1] + 1000])
 
 
@@ -235,12 +235,14 @@ plt.ioff()
 ruta_figuras = ruta + '/figuras/'
 os.makedirs(ruta_figuras, exist_ok=True)
 
+
 for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_energia(i=i, ax=ax, errorbar=True)
     fig.savefig(ruta_figuras + 'energia_rho_' + str_rho + '_fig.png')
     plt.close()
+
 
 for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
@@ -249,6 +251,7 @@ for i, r in enumerate(rho):
     fig.savefig(ruta_figuras + 'presion_rho_' + str_rho + '_fig.png')
     plt.close()
 
+
 for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
@@ -256,9 +259,19 @@ for i, r in enumerate(rho):
     fig.savefig(ruta_figuras + 'lindemann_rho_' + str_rho + '_fig.png')
     plt.close()
 
+
 for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_temperatura(i=i, ax=ax, errorbar=True)
     fig.savefig(ruta_figuras + 'temp_rho_' + str_rho + '_fig.png')
     plt.close()
+
+
+fig, ax = plt.subplots(1)
+for i in range(9):
+    plot_lindemann_array(i=6, j=0 + 8 * i, ax=ax)
+
+str_rho = '%3.1f' % rho[6]
+fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig.png')
+plt.close()
