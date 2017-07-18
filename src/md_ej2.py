@@ -14,13 +14,14 @@ except:
         print('Se utilizará', matplotlib.get_backend())
 
 from md_class import md
-
 import argparse
 from cycler import cycler
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from matplotlib.collections import PolyCollection
 import numpy as np
 import os
-from scipy.interpolate import griddata
+from scipy.interpolate import InterpolatedUnivariateSpline as spline
 import sys
 
 ######################
@@ -61,8 +62,8 @@ plt.rc('errorbar', capsize=2.0)
 # Ejes (autoestilo para múltiples curvas)
 lc_cycler = cycler('color', ['0.0', '0.5'])
 lw_cycler = cycler('lw', [2, 1])
-ls_cycler = cycler('ls', ['-', '--', ':'])
-plt.rc('axes', prop_cycle=lc_cycler * lw_cycler * ls_cycler)
+ls_cycler = cycler('ls', ['-', '--', ':', '-.'])
+plt.rc('axes', prop_cycle=lw_cycler * ls_cycler)
 
 ####################
 # CARGA DE ARCHIVOS
@@ -107,8 +108,8 @@ for r, dato in datos:
     temp.append(dato[1])
     temp_real.append(dato[2])
     std_temp.append(dato[3])
-    energia.append(dato[4])
-    std_energia.append(dato[5])
+    energia.append(dato[4] / 1000)
+    std_energia.append(dato[5] / 1000)
 
     vol = N / r
     presion_corregida = (dato[6] / vol + 1) * r * dato[2]
@@ -179,6 +180,46 @@ def plot_presion(i=0, ax=None, errorbar=True):
     ax.legend(loc='best')
 
 
+def plot_presion_exceso(i=0, ax=None, errorbar=True):
+    str_rho = '%3.1f' % rho[i]
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    p_exceso = presion[i] / (temp_real[i] * rho[i]) - 1
+    std_exceso = std_presion[i] * (temp_real[i] * rho[i])
+    if errorbar:
+        ax.errorbar(1 / temp_real[i], p_exceso,
+                    xerr=std_temp[i] / temp_real[i]**2, yerr=std_exceso,
+                    label=r'Presión de exceso ($\rho$: ' + str_rho + ')',
+                    ls=' ', marker='o', elinewidth=0.5)
+    else:
+        ax.plot(temp_real[i], presion[i], label='Presión')
+    ax.set_xlabel(r'1/T')
+    ax.set_ylabel(r'Presión')
+    ax.legend(loc='best')
+
+
+def plot_presion_vs_V(i=0, ax=None, errorbar=True):
+    str_temp = '%3.1f' % temp_real[0][i]
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    vol = N / np.asarray(rho)
+    p = np.asarray(presion).T[i]
+
+    if errorbar:
+        ax.errorbar(vol, p,
+                    yerr=np.asarray(std_presion).T[i],
+                    label=r'Presión ($T$: ' + str_temp + ')',
+                    ls=' ', marker='o', elinewidth=0.5)
+    else:
+        ax.plot(vol, p, marker='o',
+                label=r'Presión ($T$: ' + str_temp + ')')
+    ax.set_xlabel(r'Volumen')
+    ax.set_ylabel(r'Presión')
+    ax.legend(loc='best')
+
+
 def plot_lindemann(i=0, ax=None, errorbar=True):
     str_rho = '%3.1f' % rho[i]
     if ax is None:
@@ -196,6 +237,28 @@ def plot_lindemann(i=0, ax=None, errorbar=True):
     ax.set_xlabel('Energía')
     ax.set_ylabel(r'Coef. de Lindemann')
     ax.legend(loc='best')
+
+
+def plot_lindemann_vs_T(i=0, ax=None, errorbar=True):
+    str_rho = '%3.1f' % rho[i]
+    if ax is None:
+        fig, ax = plt.subplots(1)
+
+    if errorbar:
+        ax.errorbar(temp_real[i], ld_avg[i],
+                    xerr=std_temp[i], yerr=ld_std[i],
+                    label=r'Coef. de Lindemann ($\rho$: ' + str_rho + ')',
+                    ls=' ', marker='o', elinewidth=0.5)
+    else:
+        ax.errorbar(temp_real[i], ld_avg[i],
+                    label=r'Coef. de Lindemann ($\rho$: ' + str_rho + ')')
+
+    ax.set_xlabel('Temperatura')
+    ax.set_ylabel(r'Coef. de Lindemann')
+    ax.annotate(r'$\rho$: ' + str_rho, xy=(temp_real[i][0], ld_avg[i][0]),
+                xytext=(temp_real[i][0] + 0.1, ld_avg[i][0]), fontsize=14,
+                verticalalignment='center')
+    ax.set_xlim([0, 2.3])
 
 
 def plot_lindemann_array(i=0, j=-1, ax=None, errorbar=True):
@@ -220,10 +283,78 @@ def plot_lindemann_array(i=0, j=-1, ax=None, errorbar=True):
     ax.set_xlim([-50, x[-1] + 1000])
 
 
-t1 = [1.05, 1.20, 0.95, 0.90, 0.80, 0.65, 0.43]
-t1e = [0.05, 0.10, 0.05, 0.05, 0.02, 0.05, 0.01]
-t2 = [0.36, 0.31, 0.33, 0.36, 0.34, 0.33, 0.31]
-t2e = [0.01, 0.01, 0.02, 0.03, 0.01, 0.02, 0.01]
+def plot_energia_waterfall(i=slice(None, None, None)):
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+
+    xs = temp_real[i]
+    ys = energia[i]
+    zs = rho[i]
+
+    xmin, ymin = [], []
+    xmax, ymax = [], []
+
+    verts = []
+    for i, z in enumerate(zs):
+        ys[i][0], ys[i][-1] = -3.2, -3.2
+        verts.append(list(zip(xs[i], ys[i])))
+        xmin.append(min(xs[i]))
+        ymin.append(min(ys[i]))
+        xmax.append(max(xs[i]))
+        ymax.append(max(ys[i]))
+
+    poly = PolyCollection(verts, facecolors=(1, 1, 1, 1),
+                          edgecolors=(0, 0, 0, 0))
+    poly.set_alpha(0.9)
+
+    ax.add_collection3d(poly, zs=zs, zdir='y')
+
+    ax.set_xlim3d(min(xmin), max(xmax))
+    ax.set_ylim3d(min(zs), max(zs))
+    ax.set_zlim3d(min(ymin), max(ymax))
+
+    ax.set_xlabel('\nTemperatura', linespacing=3)
+    ax.set_ylabel('\nDensidad', linespacing=3)
+    ax.set_zlabel('\nEnergía', linespacing=3)
+
+    return fig, ax
+
+
+def plot_presion_waterfall(i=slice(None, None, None)):
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+
+    xs = temp_real[i]
+    ys = presion[i]
+    zs = N / np.asarray(rho[i])
+
+    xmin, ymin = [], []
+    xmax, ymax = [], []
+
+    verts = []
+    for i, z in enumerate(zs):
+        ys[i][0], ys[i][-1] = -0.2, -0.2
+        verts.append(list(zip(xs[i], ys[i])))
+        xmin.append(min(xs[i]))
+        ymin.append(min(ys[i]))
+        xmax.append(max(xs[i]))
+        ymax.append(max(ys[i]))
+
+    poly = PolyCollection(verts, facecolors=(1, 1, 1, 1),
+                          edgecolors=(0, 0, 0, 0))
+    poly.set_alpha(0.9)
+
+    ax.add_collection3d(poly, zs=zs, zdir='y')
+
+    ax.set_xlim3d(min(xmin), max(xmax))
+    ax.set_ylim3d(min(zs), max(zs))
+    ax.set_zlim3d(min(ymin), max(ymax))
+
+    ax.set_xlabel('\nTemperatura', linespacing=3)
+    ax.set_ylabel('\nDensidad', linespacing=3)
+    ax.set_zlabel('\nPresión', linespacing=3)
 
 
 ###########################
@@ -240,7 +371,7 @@ for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_energia(i=i, ax=ax, errorbar=True)
-    fig.savefig(ruta_figuras + 'energia_rho_' + str_rho + '_fig.png')
+    # fig.savefig(ruta_figuras + 'energia_rho_' + str_rho + '_fig.png')
     plt.close()
 
 
@@ -248,7 +379,15 @@ for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_presion(i=i, ax=ax, errorbar=True)
-    fig.savefig(ruta_figuras + 'presion_rho_' + str_rho + '_fig.png')
+    # fig.savefig(ruta_figuras + 'presion_rho_' + str_rho + '_fig.png')
+    plt.close()
+
+
+for i, r in enumerate(rho):
+    str_rho = '%3.1f' % r
+    fig, ax = plt.subplots(1)
+    plot_presion_exceso(i=i, ax=ax, errorbar=True)
+    # fig.savefig(ruta_figuras + 'p_exceso_rho_' + str_rho + '_fig.png')
     plt.close()
 
 
@@ -256,7 +395,7 @@ for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_lindemann(i=i, ax=ax, errorbar=True)
-    fig.savefig(ruta_figuras + 'lindemann_rho_' + str_rho + '_fig.png')
+    # fig.savefig(ruta_figuras + 'lindemann_rho_' + str_rho + '_fig.png')
     plt.close()
 
 
@@ -264,7 +403,7 @@ for i, r in enumerate(rho):
     str_rho = '%3.1f' % r
     fig, ax = plt.subplots(1)
     plot_temperatura(i=i, ax=ax, errorbar=True)
-    fig.savefig(ruta_figuras + 'temp_rho_' + str_rho + '_fig.png')
+    # fig.savefig(ruta_figuras + 'temp_rho_' + str_rho + '_fig.png')
     plt.close()
 
 
@@ -272,6 +411,94 @@ fig, ax = plt.subplots(1)
 for i in range(9):
     plot_lindemann_array(i=6, j=0 + 8 * i, ax=ax)
 
+
 str_rho = '%3.1f' % rho[6]
-fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig.png')
+#fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig.png')
+plt.close()
+
+
+fig, ax = plt.subplots(1)
+for i in range(9):
+    plot_lindemann_array(i=6, j=40 + 4 * i, ax=ax)
+
+
+str_rho = '%3.1f' % rho[6]
+#fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig2.png')
+plt.close()
+
+fig, ax = plt.subplots(2, sharex='all')
+fig.subplots_adjust(hspace=0.025)
+str_rho = '%3.1f' % rho[2]
+ax[0].set_xlabel(' ')
+ax[0].axvline(0.965, color='k', ls=':')
+ax[0].axvline(0.34, color='k', ls=':')
+plot_energia(i=2, ax=ax[0], errorbar=True)
+ax[1].axvline(0.965, color='k', ls=':')
+ax[1].axvline(0.34, color='k', ls=':')
+plot_presion(i=2, ax=ax[1], errorbar=True)
+fig.savefig(ruta_figuras + 'energia_presion_rho_' + str_rho + '_fig.png')
+plt.close()
+
+fig, ax = plt.subplots(2, sharex='all')
+fig.subplots_adjust(hspace=0.025)
+str_rho = '%3.1f' % rho[3]
+ax[0].set_xlabel(' ')
+ax[0].axvline(0.90, color='k', ls=':')
+ax[0].axvline(0.365, color='k', ls=':')
+plot_energia(i=3, ax=ax[0], errorbar=True)
+ax[1].axvline(0.90, color='k', ls=':')
+ax[1].axvline(0.365, color='k', ls=':')
+plot_presion(i=3, ax=ax[1], errorbar=True)
+fig.savefig(ruta_figuras + 'energia_presion_rho_' + str_rho + '_fig.png')
+plt.close()
+
+fig, ax = plt.subplots(2, sharex='all')
+fig.subplots_adjust(hspace=0.025)
+str_rho = '%3.1f' % rho[4]
+ax[0].set_xlabel(' ')
+ax[0].axvline(0.82, color='k', ls=':')
+ax[0].axvline(0.34, color='k', ls=':')
+plot_energia(i=4, ax=ax[0], errorbar=True)
+ax[1].axvline(0.82, color='k', ls=':')
+ax[1].axvline(0.34, color='k', ls=':')
+plot_presion(i=4, ax=ax[1], errorbar=True)
+fig.savefig(ruta_figuras + 'energia_presion_rho_' + str_rho + '_fig.png')
+plt.close()
+
+fig, ax = plt.subplots(2, sharex='all')
+fig.subplots_adjust(hspace=0.025)
+str_rho = '%3.1f' % rho[5]
+ax[0].set_xlabel(' ')
+ax[0].axvline(0.640, color='k', ls=':')
+ax[0].axvline(0.345, color='k', ls=':')
+plot_energia(i=5, ax=ax[0], errorbar=True)
+ax[1].axvline(0.640, color='k', ls=':')
+ax[1].axvline(0.345, color='k', ls=':')
+plot_presion(i=5, ax=ax[1], errorbar=True)
+fig.savefig(ruta_figuras + 'energia_presion_rho_' + str_rho + '_fig.png')
+plt.close()
+
+fig, ax = plt.subplots(2, sharex='all')
+fig.subplots_adjust(hspace=0.025)
+str_rho = '%3.1f' % rho[6]
+ax[0].set_xlabel(' ')
+ax[0].axvline(0.435, color='k', ls=':')
+ax[0].axvline(0.315, color='k', ls=':')
+plot_energia(i=6, ax=ax[0], errorbar=True)
+ax[1].axvline(0.435, color='k', ls=':')
+ax[1].axvline(0.315, color='k', ls=':')
+plot_presion(i=6, ax=ax[1], errorbar=True)
+fig.savefig(ruta_figuras + 'energia_presion_rho_' + str_rho + '_fig.png')
+plt.close()
+
+
+t1 = [1.05, 1.20, 0.965, 0.90, 0.80, 0.64, 0.435]
+t1e = [0.05, 0.10, 0.05, 0.05, 0.02, 0.05, 0.01]
+
+t2 = [0.36, 0.31, 0.33, 0.365, 0.34, 0.345, 0.315]
+t2e = [0.01, 0.01, 0.02, 0.03, 0.01, 0.02, 0.01]
+
+fig, ax = plot_energia_waterfall(slice(0, 6))
+ax.plot([1.32, 0.66], [rho[0], rho[5]], [0.35, -1.78], ls='--', lw=2)
+ax.plot([0.36, 0.33], [rho[0], rho[5]], [-2.5, -2.8], ls='--', lw=2)
 plt.close()
