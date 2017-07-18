@@ -516,7 +516,7 @@ class md():
 
         animacion = animation.FuncAnimation(fig, update, frames,
                                             fargs=(pos, particulas),
-                                            interval=50, blit=False)
+                                            interval=1, blit=False)
 
         plt.show()
         return animacion

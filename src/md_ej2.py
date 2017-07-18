@@ -410,8 +410,6 @@ for i, r in enumerate(rho):
 fig, ax = plt.subplots(1)
 for i in range(9):
     plot_lindemann_array(i=6, j=0 + 8 * i, ax=ax)
-
-
 str_rho = '%3.1f' % rho[6]
 #fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig.png')
 plt.close()
@@ -419,11 +417,9 @@ plt.close()
 
 fig, ax = plt.subplots(1)
 for i in range(9):
-    plot_lindemann_array(i=6, j=40 + 4 * i, ax=ax)
-
-
-str_rho = '%3.1f' % rho[6]
-#fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig2.png')
+    plot_lindemann_array(i=5, j=40 + 4 * i, ax=ax)
+str_rho = '%3.1f' % rho[5]
+fig.savefig(ruta_figuras + 'ld_array_rho_' + str_rho + '_fig2.png')
 plt.close()
 
 fig, ax = plt.subplots(2, sharex='all')
